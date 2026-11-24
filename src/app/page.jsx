@@ -113,7 +113,7 @@ export default async function Home() {
             </article>
             <article className="learning-feature">
               <span className="feature-icon"><Languages size={21} /></span>
-              <div><h3>English + বাংলা</h3><p>Choose English, simple Bangla, or Bangla with English technical terms.</p></div>
+              <div><h3>English + বাংলা</h3><p>Translate articles and selected passages with simple, professional, or technical Bangla styles.</p></div>
             </article>
             <article className="learning-feature">
               <span className="feature-icon"><ShieldCheck size={21} /></span>

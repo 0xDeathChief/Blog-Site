@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { generateChatWithOllama, OllamaRequestError } from "@/lib/ai/ollama";
 import {
@@ -10,8 +9,8 @@ import {
   normalizeArticleText,
   selectRelevantArticleText,
 } from "@/lib/ai/assistant";
+import { checkAiRateLimit } from "@/lib/ai/rate-limit";
 import { readJsonBody } from "@/lib/auth/api";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const maxDuration = 300;
@@ -72,7 +71,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "The assistant service is not configured yet." }, { status: 503 });
   }
 
-  const rateLimitResponse = await checkRateLimit(request, userId);
+  const rateLimitResponse = await checkAiRateLimit(request, userId);
   if (rateLimitResponse) return rateLimitResponse;
 
   let article = null;
@@ -186,39 +185,6 @@ async function summarizeLongArticle({ input, article, chunks, system }) {
     system,
     messages: [{ role: "user", content: finalMessage }],
   });
-}
-
-async function checkRateLimit(request, userId) {
-  const address = request.headers.get("x-real-ip")
-    ?? request.headers.get("x-forwarded-for")?.split(",")[0].trim()
-    ?? "shared";
-  const subject = userId
-    ? `user:${userId}`
-    : `ip:${createHash("sha256").update(address).digest("hex")}`;
-  let adminClient;
-  try {
-    adminClient = createSupabaseAdminClient();
-  } catch (error) {
-    console.error("AI assistant rate limiting is not configured.", error);
-    return NextResponse.json({ error: "The assistant service is not configured yet." }, { status: 503 });
-  }
-
-  const { data: withinLimit, error } = await adminClient.rpc("consume_rate_limit", {
-    p_bucket_key: `ai:${subject}`,
-    p_request_limit: userId ? 20 : 10,
-    p_window_seconds: 300,
-  });
-  if (error) {
-    console.error("AI assistant rate limit could not be enforced.", error);
-    return NextResponse.json({ error: "The assistant service is temporarily unavailable." }, { status: 503 });
-  }
-  if (!withinLimit) {
-    return NextResponse.json(
-      { error: "You've reached the assistant request limit. Try again in a few minutes." },
-      { status: 429, headers: { "Retry-After": "300", "Cache-Control": "no-store" } },
-    );
-  }
-  return null;
 }
 
 function isSameOriginRequest(request) {

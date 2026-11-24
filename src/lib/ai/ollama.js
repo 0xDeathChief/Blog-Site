@@ -17,13 +17,15 @@ const responseSchema = z.object({
 });
 const chatRequestSchema = z.object({
   system: z.string().trim().min(1).max(6000),
+  format: z.enum(["json"]).optional(),
+  maxOutputTokens: z.number().int().min(128).max(4000).optional(),
   messages: z.array(z.object({
     role: z.enum(["user", "assistant"]),
     content: z.string().trim().min(1).max(24000),
   }).strict()).min(1).max(16),
 }).strict();
 const chatResponseSchema = z.object({
-  message: z.object({ content: z.string().trim().min(1).max(20000) }),
+  message: z.object({ content: z.string().trim().min(1).max(30000) }),
 });
 
 export class OllamaRequestError extends Error {
@@ -100,7 +102,12 @@ export async function generateChatWithOllama(input) {
           ...request.data.messages,
         ],
         stream: false,
-        options: { temperature: 0.3, num_ctx: 8192, num_predict: 1200 },
+        format: request.data.format,
+        options: {
+          temperature: 0.3,
+          num_ctx: 8192,
+          num_predict: request.data.maxOutputTokens ?? 1200,
+        },
       }),
       signal: AbortSignal.timeout(90_000),
       cache: "no-store",

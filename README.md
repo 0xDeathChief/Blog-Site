@@ -60,9 +60,15 @@ Account administration is available at `GET`/`POST /api/admin/users` and `PATCH`
 2. Set `OLLAMA_BASE_URL` and `OLLAMA_MODEL` in `.env.local`; the model URL and name are read only on the server.
 3. Configure Supabase and apply the migrations above. The assistant uses the server-only service-role key and the database `consume_rate_limit` function to enforce request limits.
 4. Open `/learning-assistant` for general questions, commands, code, study notes, quizzes, and learning roadmaps. Published article pages include article questions, summaries, and selected-text actions.
-5. Requests are same-origin checked, validated and size-limited. Requests are limited to 20 per authenticated user or 10 per IP per five minutes. Article-question context is selected on the server; selection actions send only the chosen passage. Longer articles (up to 96,000 extracted characters) are summarized in bounded sections. The assistant prompt is restricted to defensive education and offline, synthetic practice.
+5. Requests are same-origin checked, validated and size-limited. Assistant requests are limited to 20 per authenticated user or 10 per IP per five minutes; translation requests have separate limits of 12 and 6. Article-question context is selected on the server; selection actions send only the chosen passage. Longer articles (up to 96,000 extracted characters) are summarized in bounded sections. The assistant prompt is restricted to defensive education and offline, synthetic practice.
 
 The assistant requires both a working Ollama model and configured Supabase credentials. It does not expose a provider secret or let the browser choose the model.
+
+## Translation
+
+Published article readers can translate a full article or selected text into English or Bangla. Bangla styles include simple, professional, and Bangla with English technical terms. AI responses can also be translated from their message controls. Translations are generated on demand and held only in the current page; they never replace or update the published article.
+
+Article translation rebuilds only text nodes in the existing Tiptap document, preserving headings, lists, tables, links, and other formatting. Code blocks and inline code remain unchanged; URLs, command flags, and parameter-like values are protected. Translation requests use the same local Ollama model and server-side rate limits as the assistant.
 
 ## Current implementation boundary
 

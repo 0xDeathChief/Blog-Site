@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import {
   Bot,
-  Check,
   Copy,
+  Eye,
+  EyeOff,
+  Languages,
   LoaderCircle,
   RotateCcw,
   Send,
@@ -40,6 +42,11 @@ const languages = [
   ["bangla", "বাংলা"],
   ["bangla_english", "বাংলা + English terms"],
 ];
+const translationStyles = [
+  ["simple_bangla", "Simple Bangla"],
+  ["professional_bangla", "Professional Bangla"],
+  ["bangla_technical", "Bangla + English technical terms"],
+];
 
 export default function AssistantChat({ articleSlug, selection = "" }) {
   const [messages, setMessages] = useState([]);
@@ -47,14 +54,27 @@ export default function AssistantChat({ articleSlug, selection = "" }) {
   const [task, setTask] = useState("chat");
   const [mode, setMode] = useState("beginner");
   const [language, setLanguage] = useState("english");
+  const [translationTarget, setTranslationTarget] = useState("bangla");
+  const [translationStyle, setTranslationStyle] = useState("bangla_technical");
+  const [responseTranslations, setResponseTranslations] = useState({});
+  const [translatingMessageId, setTranslatingMessageId] = useState("");
+  const [translationError, setTranslationError] = useState("");
+  const [selectedTranslation, setSelectedTranslation] = useState(null);
+  const [showSelectedTranslation, setShowSelectedTranslation] = useState(false);
+  const [translatingSelection, setTranslatingSelection] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const endOfMessagesRef = useRef(null);
+  const currentSelectionRef = useRef(selection);
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, busy]);
+
+  useEffect(() => {
+    currentSelectionRef.current = selection;
+  }, [selection]);
 
   async function sendPrompt({
     prompt,
@@ -132,7 +152,6 @@ export default function AssistantChat({ articleSlug, selection = "" }) {
     const prompts = {
       selection_explain: "Explain this selected passage in clear, beginner-friendly language.",
       selection_simplify: "Simplify this selected passage without losing its technical meaning.",
-      selection_translate: "Translate this selected passage into the selected language.",
       selection_code: "Explain this selected code or command and identify any risky behavior.",
     };
     sendPrompt({
@@ -164,13 +183,100 @@ export default function AssistantChat({ articleSlug, selection = "" }) {
     }
   }
 
+  async function translateResponse(message) {
+    const current = responseTranslations[message.id];
+    if (
+      current
+      && current.targetLanguage === translationTarget
+      && current.style === translationStyle
+    ) {
+      setResponseTranslations((translations) => ({
+        ...translations,
+        [message.id]: { ...current, visible: !current.visible },
+      }));
+      return;
+    }
+
+    setTranslatingMessageId(message.id);
+    setTranslationError("");
+    try {
+      const response = await fetch("/api/ai/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "response",
+          text: message.content,
+          targetLanguage: translationTarget,
+          style: translationStyle,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Unable to translate this response.");
+      setResponseTranslations((translations) => ({
+        ...translations,
+        [message.id]: {
+          text: result.translation,
+          targetLanguage: translationTarget,
+          style: translationStyle,
+          visible: true,
+        },
+      }));
+    } catch (requestError) {
+      setTranslationError(requestError instanceof Error ? requestError.message : "Unable to translate this response.");
+    } finally {
+      setTranslatingMessageId("");
+    }
+  }
+
+  async function translateSelectedText() {
+    if (!articleSlug || !selection || selection.length > 12000 || translatingSelection) return;
+    const sourceSelection = selection;
+    setTranslatingSelection(true);
+    setTranslationError("");
+    try {
+      const response = await fetch("/api/ai/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "selection",
+          articleSlug,
+          selection: sourceSelection,
+          targetLanguage: translationTarget,
+          style: translationStyle,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Unable to translate the selected text.");
+      if (currentSelectionRef.current === sourceSelection) {
+        setSelectedTranslation({
+          text: result.translation,
+          targetLanguage: translationTarget,
+          style: translationStyle,
+          unchanged: Boolean(result.unchanged),
+          sourceSelection,
+        });
+        setShowSelectedTranslation(true);
+      }
+    } catch (requestError) {
+      setTranslationError(requestError instanceof Error ? requestError.message : "Unable to translate the selected text.");
+    } finally {
+      setTranslatingSelection(false);
+    }
+  }
+
   function clearConversation() {
     setMessages([]);
     setError("");
+    setTranslationError("");
+    setResponseTranslations({});
+    setSelectedTranslation(null);
     setNotice("Conversation cleared.");
   }
 
   const selectionTooLong = selection.length > 6000;
+  const currentSelectedTranslation = selectedTranslation?.sourceSelection === selection
+    ? selectedTranslation
+    : null;
 
   return (
     <section className="assistant-chat-card" aria-label="Cybersecurity learning assistant">
@@ -182,7 +288,7 @@ export default function AssistantChat({ articleSlug, selection = "" }) {
             <p>Local AI · Answers stay on your configured server</p>
           </div>
         </div>
-        <button className="assistant-icon-button" type="button" onClick={clearConversation} disabled={busy || (!messages.length && !notice)} aria-label="Clear conversation" title="Clear conversation">
+        <button className="assistant-icon-button" type="button" onClick={clearConversation} disabled={busy || Boolean(translatingMessageId) || translatingSelection || (!messages.length && !notice)} aria-label="Clear conversation" title="Clear conversation">
           <Trash2 size={16} />
         </button>
       </header>
@@ -211,6 +317,22 @@ export default function AssistantChat({ articleSlug, selection = "" }) {
         </label>
       </div>
 
+      <div className="assistant-translation-settings">
+        <label>
+          <span>Translate responses to</span>
+          <select value={translationTarget} onChange={(event) => setTranslationTarget(event.target.value)}>
+            <option value="bangla">Bangla</option>
+            <option value="english">English</option>
+          </select>
+        </label>
+        <label>
+          <span>Bangla translation style</span>
+          <select value={translationStyle} onChange={(event) => setTranslationStyle(event.target.value)} disabled={translationTarget === "english"}>
+            {translationStyles.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+          </select>
+        </label>
+      </div>
+
       {selection && (
         <div className="assistant-selection">
           <div className="assistant-selection-heading">
@@ -218,14 +340,27 @@ export default function AssistantChat({ articleSlug, selection = "" }) {
             <span>{selection.length.toLocaleString()} characters</span>
           </div>
           <p>{selection.length > 360 ? `${selection.slice(0, 360)}…` : selection}</p>
-          {selectionTooLong ? (
-            <span className="assistant-selection-warning">Select 6,000 characters or fewer for a focused explanation.</span>
-          ) : (
-            <div className="assistant-quick-actions">
-              <button type="button" onClick={() => askAboutSelection("selection_explain")} disabled={busy}>Explain</button>
-              <button type="button" onClick={() => askAboutSelection("selection_simplify")} disabled={busy}>Simplify</button>
-              <button type="button" onClick={() => askAboutSelection("selection_translate")} disabled={busy}>Translate</button>
-              <button type="button" onClick={() => askAboutSelection("selection_code")} disabled={busy}>Explain code</button>
+          <div className="assistant-quick-actions">
+            <button type="button" onClick={() => askAboutSelection("selection_explain")} disabled={busy || selectionTooLong}>Explain</button>
+            <button type="button" onClick={() => askAboutSelection("selection_simplify")} disabled={busy || selectionTooLong}>Simplify</button>
+            <button type="button" onClick={translateSelectedText} disabled={!articleSlug || translatingSelection || selection.length > 12000}>
+              {translatingSelection ? "Translating…" : "Translate"}
+            </button>
+            <button type="button" onClick={() => askAboutSelection("selection_code")} disabled={busy || selectionTooLong}>Explain code</button>
+          </div>
+          {selectionTooLong && selection.length <= 12000 && (
+            <span className="assistant-selection-warning">AI explanations support up to 6,000 characters; translation supports up to 12,000.</span>
+          )}
+          {selection.length > 12000 && (
+            <span className="assistant-selection-warning">Select 12,000 characters or fewer to translate this passage.</span>
+          )}
+          {currentSelectedTranslation && (
+            <div className="assistant-selection-result">
+              <button type="button" onClick={() => setShowSelectedTranslation((value) => !value)}>
+                {showSelectedTranslation ? "Show original selection" : "Show translated selection"}
+              </button>
+              {currentSelectedTranslation.unchanged && <span> Code and commands are kept unchanged.</span>}
+              <p>{showSelectedTranslation ? currentSelectedTranslation.text : selection}</p>
             </div>
           )}
         </div>
@@ -246,11 +381,44 @@ export default function AssistantChat({ articleSlug, selection = "" }) {
               <time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time>
             </div>
             <div className="assistant-markdown">
-              <ReactMarkdown>{message.content}</ReactMarkdown>
+              <ReactMarkdown>
+                {responseTranslations[message.id]?.visible
+                  ? responseTranslations[message.id].text
+                  : message.content}
+              </ReactMarkdown>
             </div>
             {message.role === "assistant" && (
               <div className="assistant-message-actions">
-                <button type="button" onClick={() => copyAnswer(message.content)} aria-label="Copy response"><Copy size={14} /> Copy</button>
+                <button
+                  type="button"
+                  onClick={() => copyAnswer(responseTranslations[message.id]?.visible ? responseTranslations[message.id].text : message.content)}
+                  aria-label="Copy response"
+                >
+                  <Copy size={14} /> Copy
+                </button>
+                <button
+                  type="button"
+                  onClick={() => translateResponse(message)}
+                  disabled={Boolean(translatingMessageId)}
+                  aria-label={responseTranslations[message.id]?.visible ? "Show original response" : "Translate response"}
+                >
+                  {translatingMessageId === message.id
+                    ? <LoaderCircle size={14} className="assistant-spinner" />
+                    : responseTranslations[message.id]?.visible
+                      ? <EyeOff size={14} />
+                      : responseTranslations[message.id]?.targetLanguage === translationTarget
+                        && responseTranslations[message.id]?.style === translationStyle
+                        ? <Eye size={14} />
+                        : <Languages size={14} />}
+                  {translatingMessageId === message.id
+                    ? "Translating…"
+                    : responseTranslations[message.id]?.visible
+                      ? "Show original"
+                      : responseTranslations[message.id]?.targetLanguage === translationTarget
+                        && responseTranslations[message.id]?.style === translationStyle
+                        ? "Show translation"
+                        : "Translate"}
+                </button>
                 {index === messages.length - 1 && (
                   <button type="button" onClick={regenerateLastAnswer} disabled={busy}><RotateCcw size={14} /> Regenerate</button>
                 )}
@@ -267,6 +435,7 @@ export default function AssistantChat({ articleSlug, selection = "" }) {
       </div>
 
       {error && <p className="workspace-alert workspace-alert-error" role="alert">{error}</p>}
+      {translationError && <p className="workspace-alert workspace-alert-error" role="alert">{translationError}</p>}
       {notice && <p className="assistant-notice" role="status">{notice}</p>}
 
       <form className="assistant-composer" onSubmit={submitQuestion}>

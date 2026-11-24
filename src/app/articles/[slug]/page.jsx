@@ -42,28 +42,23 @@ export default async function PublishedArticlePage({ params }) {
       <article className="published-article-page">
         <div className="shell published-article-shell">
           <Link className="back-link" href="/#latest">← Latest articles</Link>
-          <header className="published-article-header">
-            <span className="article-category">{article.categories?.name ?? "Cybersecurity"}</span>
-            <h1>{article.title}</h1>
-            <p className="published-article-summary">{article.summary}</p>
-            <div className="published-article-meta">
-              <span>By {authorName}</span>
-              <span>{formatDate(article.published_at)}</span>
-              <span>{article.reading_time_minutes} min read</span>
-              <span>{capitalize(article.difficulty)}</span>
-            </div>
-            {article.article_tags?.length > 0 && (
-              <div className="published-article-tags">
-                {article.article_tags.map(({ tags }) => tags && <span key={tags.id}>{tags.name}</span>)}
-              </div>
-            )}
-          </header>
           {coverUrl && (
             <div className="published-article-cover">
               <Image src={coverUrl} alt="" width={1280} height={640} unoptimized priority />
             </div>
           )}
-          <ArticleLearningExperience articleSlug={article.slug} content={article.content} />
+          <ArticleLearningExperience
+            articleSlug={article.slug}
+            category={article.categories?.name ?? "Cybersecurity"}
+            title={article.title}
+            summary={article.summary}
+            authorName={authorName}
+            publishedDate={formatDate(article.published_at)}
+            readingTime={article.reading_time_minutes}
+            difficulty={article.difficulty}
+            tags={article.article_tags?.map(({ tags }) => tags?.name).filter(Boolean) ?? []}
+            content={article.content}
+          />
           <footer className="published-article-footer">
             <span>Reviewed and published by the CipherBrief editorial team.</span>
             <Link href="/">Explore more security writing</Link>
@@ -72,10 +67,6 @@ export default async function PublishedArticlePage({ params }) {
       </article>
     </main>
   );
-}
-
-function capitalize(value) {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 function formatDate(value) {
