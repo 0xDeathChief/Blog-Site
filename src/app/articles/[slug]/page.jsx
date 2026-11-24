@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import SiteHeader from "@/components/SiteHeader";
+import SiteHeader from "@/components/layout/SiteHeader";
 import ArticleLearningExperience from "@/components/articles/ArticleLearningExperience";
 import { getCurrentPrincipal } from "@/lib/auth/authorization";
 import { getPublishedArticleBySlug } from "@/lib/articles/public";

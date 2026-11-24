@@ -12,6 +12,18 @@ A cybersecurity publication and learning-community project, built with the Next.
 - Tiptap provides rich article editing, syntax-highlighted code, tables, images, and Markdown import/export.
 - Zod validates article metadata and the server sanitizes the Tiptap document before saving.
 
+## Project structure and documentation
+
+Page and API entry points live in `src/app`; reusable UI is grouped by domain in `src/components`; server-side data access and business logic live in `src/lib`. Shared layout UI is under `src/components/layout`, while public discovery UI is under `src/components/public`. Routes remain at their existing URLs; unused scaffold folders are intentionally omitted.
+
+- [Architecture](./docs/ARCHITECTURE.md)
+- [Database and migrations](./docs/DATABASE.md)
+- [Roles and permissions](./docs/RBAC.md)
+- [AI setup](./docs/AI_SETUP.md)
+- [Security architecture](./docs/SECURITY.md)
+- [Development guide](./docs/DEVELOPMENT.md)
+- [API reference](./docs/API.md)
+
 ## Run locally
 
 ```powershell
@@ -45,7 +57,7 @@ Set `NEXT_PUBLIC_SITE_URL` to the canonical production origin before deployment;
 
    Confirm that exactly one row changed. After bootstrap, use the owner-only account API to invite and manage users.
 
-The migrations create the four roles, article workflow, review/revision history, audit records, settings, seeded starter categories/tags, and the cover-image bucket. The final migration normalizes profile, article, review, comment, engagement, AI-message, translation, and audit fields while preserving existing records. It enables RLS, prevents users from changing their own role, restricts role updates to an owner-checked function, and limits article state transitions and snapshots to guarded database functions. The API verifies sessions and roles on the server, checks request origin for mutations, validates cover-image content, and sanitizes article documents before saving.
+The migrations create the four roles, article workflow, review/revision history, audit records, settings, seeded starter categories/tags, and the cover-image bucket. The final migration normalizes profile, article, review, comment, engagement, AI-message, translation, and audit fields while preserving existing records. It enables RLS, prevents users from changing their own role, restricts role updates to an owner-checked function, and limits article state transitions and snapshots to guarded database functions. The API verifies sessions and roles on the server, checks request origin for mutations, validates cover-image content, and sanitizes article documents before saving. Migration order and table relationships are described in [DATABASE.md](./docs/DATABASE.md).
 
 The search migration adds a PostgreSQL full-text index and a public-only search function. It searches article text and topic/tag names, applies filters and popularity sorting in the database, and returns bounded pages so unpublished articles are not exposed.
 

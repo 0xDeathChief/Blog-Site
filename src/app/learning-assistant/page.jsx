@@ -1,5 +1,5 @@
 import { Bot, Languages, ShieldCheck } from "lucide-react";
-import SiteHeader from "@/components/SiteHeader";
+import SiteHeader from "@/components/layout/SiteHeader";
 import AssistantChat from "@/components/ai/AssistantChat";
 
 export const metadata = {

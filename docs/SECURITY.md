@@ -1,4 +1,4 @@
-# Security
+# Security Architecture
 
 CipherBrief uses layered controls: Supabase Auth identifies users, server code checks permissions, and PostgreSQL Row Level Security (RLS) enforces access at the data layer. UI visibility is not an authorization control.
 

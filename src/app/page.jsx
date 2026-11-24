@@ -13,8 +13,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import ArticleExplorer from "@/components/ArticleExplorer";
-import SiteHeader from "@/components/SiteHeader";
+import ArticleExplorer from "@/components/public/ArticleExplorer";
+import SiteHeader from "@/components/layout/SiteHeader";
 import { getPublicAuthors, getPublicCategories } from "@/lib/articles/public";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
 
