@@ -103,21 +103,21 @@ export default async function Home() {
           <div className="learning-copy">
             <span className="section-kicker">LEARNING, IN YOUR LANGUAGE</span>
             <h2>Make complex security ideas easier to understand.</h2>
-            <p>Learning tools are being designed for beginners, with English and Bangla explanations and a local-AI option to keep learning closer to home.</p>
-            <span className="planned-badge"><span /> IN DEVELOPMENT</span>
+            <p>Explore concepts with a configurable local model, choose a teaching depth, and ask questions in English or Bangla. On article pages, select a passage for a focused explanation.</p>
+            <a className="primary-button assistant-cta" href="/learning-assistant">Open the learning assistant <ArrowRight size={16} /></a>
           </div>
           <div className="learning-features">
             <article className="learning-feature">
               <span className="feature-icon"><Bot size={21} /></span>
-              <div><h3>AI learning assistant</h3><p>Beginner-friendly explanations and guided study, grounded in trusted learning content.</p></div>
+              <div><h3>AI learning assistant</h3><p>Ask about concepts, commands, code, vulnerabilities, or learning paths.</p></div>
             </article>
             <article className="learning-feature">
               <span className="feature-icon"><Languages size={21} /></span>
-              <div><h3>English + বাংলা</h3><p>Switch languages to make security concepts more accessible to more learners.</p></div>
+              <div><h3>English + বাংলা</h3><p>Choose English, simple Bangla, or Bangla with English technical terms.</p></div>
             </article>
             <article className="learning-feature">
               <span className="feature-icon"><ShieldCheck size={21} /></span>
-              <div><h3>Local AI, by design</h3><p>Plan for local model support so learning can be more private and self-hosted.</p></div>
+              <div><h3>Local AI, by design</h3><p>Model access stays on the server and uses your configured Ollama instance.</p></div>
             </article>
           </div>
         </div>

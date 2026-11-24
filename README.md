@@ -8,7 +8,7 @@ A cybersecurity publication and learning-community project, built with the Next.
 - Tailwind CSS 4, DaisyUI, and Lucide React.
 - Supabase PostgreSQL, Authentication, and Storage through `@supabase/ssr`.
 - Zod for validating configuration and future user input.
-- Ollama through a server-only, model-configurable helper.
+- Ollama through a server-only, model-configurable assistant endpoint.
 - Tiptap provides rich article editing, syntax-highlighted code, tables, images, and Markdown import/export.
 - Zod validates article metadata and the server sanitizes the Tiptap document before saving.
 
@@ -54,12 +54,16 @@ Article revisions keep the previous content and metadata, including category, di
 
 Account administration is available at `GET`/`POST /api/admin/users` and `PATCH`/`DELETE /api/admin/users/:userId`.
 
-## Local AI setup
+## Learning assistant setup
 
 1. Install Ollama and pull a model supported by your machine.
-2. Set `OLLAMA_BASE_URL` and `OLLAMA_MODEL` in `.env.local`.
-3. The Ollama helper is server-only. It is not exposed as a user-facing endpoint.
+2. Set `OLLAMA_BASE_URL` and `OLLAMA_MODEL` in `.env.local`; the model URL and name are read only on the server.
+3. Configure Supabase and apply the migrations above. The assistant uses the server-only service-role key and the database `consume_rate_limit` function to enforce request limits.
+4. Open `/learning-assistant` for general questions, commands, code, study notes, quizzes, and learning roadmaps. Published article pages include article questions, summaries, and selected-text actions.
+5. Requests are same-origin checked, validated and size-limited. Requests are limited to 20 per authenticated user or 10 per IP per five minutes. Article-question context is selected on the server; selection actions send only the chosen passage. Longer articles (up to 96,000 extracted characters) are summarized in bounded sections. The assistant prompt is restricted to defensive education and offline, synthetic practice.
+
+The assistant requires both a working Ollama model and configured Supabase credentials. It does not expose a provider secret or let the browser choose the model.
 
 ## Current implementation boundary
 
-The article workspace, editorial workflow, cover upload validation, sign-in form, and published-article reader are implemented. Reader comments, bookmarks, likes, category/tag management screens, password/invitation callback flows, and AI/translation endpoints remain future work. The migrations have not been applied to a live Supabase project here; SQL execution, RLS behavior, storage policies, and Auth integration must be validated in a development project before production use.
+The article workspace, editorial workflow, cover upload validation, sign-in form, published-article reader, and local AI learning-assistant interface/API are implemented. Reader comments, bookmarks, likes, category/tag management screens, and password/invitation callback flows remain future work. The migrations have not been applied to a live Supabase project here; SQL execution, RLS behavior, storage policies, rate limiting, Auth integration, and Ollama connectivity must be validated in a development project before production use.

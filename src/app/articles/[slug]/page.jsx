@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import SiteHeader from "@/components/SiteHeader";
-import ArticleEditor from "@/components/articles/ArticleEditor";
+import ArticleLearningExperience from "@/components/articles/ArticleLearningExperience";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -63,7 +63,7 @@ export default async function PublishedArticlePage({ params }) {
               <Image src={coverUrl} alt="" width={1280} height={640} unoptimized priority />
             </div>
           )}
-          <ArticleEditor content={article.content} readOnly />
+          <ArticleLearningExperience articleSlug={article.slug} content={article.content} />
           <footer className="published-article-footer">
             <span>Reviewed and published by the CipherBrief editorial team.</span>
             <Link href="/">Explore more security writing</Link>

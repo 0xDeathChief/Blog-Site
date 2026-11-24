@@ -27,7 +27,7 @@ import {
 
 const initialContent = { type: "doc", content: [{ type: "paragraph" }] };
 
-export default function ArticleEditor({ content, onChange, readOnly = false }) {
+export default function ArticleEditor({ content, onChange, onTextSelection, readOnly = false }) {
   const [showMarkdown, setShowMarkdown] = useState(false);
   const [markdownText, setMarkdownText] = useState("");
   const [codeLanguage, setCodeLanguage] = useState("bash");
@@ -86,10 +86,20 @@ export default function ArticleEditor({ content, onChange, readOnly = false }) {
 
   if (readOnly) {
     return (
-      <div className="article-reader-content">
+      <div className="article-reader-content" onMouseUp={publishSelection} onKeyUp={publishSelection}>
         <EditorContent editor={editor} className="tiptap-content" />
       </div>
     );
+  }
+
+  function publishSelection(event) {
+    const selection = window.getSelection();
+    const selectedText = selection?.toString().trim() ?? "";
+    if (selectedText && event.currentTarget.contains(selection.anchorNode)) {
+      onTextSelection?.(selectedText);
+    } else {
+      onTextSelection?.("");
+    }
   }
 
   return (

@@ -18,7 +18,7 @@ export default function SiteHeader() {
         <nav className={menuOpen ? "nav-links open" : "nav-links"} aria-label="Main navigation">
           <Link href="/#latest" onClick={() => setMenuOpen(false)}>Latest</Link>
           <Link href="/#topics" onClick={() => setMenuOpen(false)}>Topics</Link>
-          <Link href="/#learn" onClick={() => setMenuOpen(false)}>Learning</Link>
+          <Link href="/learning-assistant" onClick={() => setMenuOpen(false)}>Learning assistant</Link>
           <Link href="/#contribute" onClick={() => setMenuOpen(false)}>Community</Link>
           <Link className="mobile-contributor-link" href="/sign-in" onClick={() => setMenuOpen(false)}>Contributor sign in</Link>
         </nav>

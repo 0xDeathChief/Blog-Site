@@ -11,7 +11,7 @@ export function createSupabaseAdminClient() {
   const result = serviceRoleKeySchema.safeParse(process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   if (!result.success) {
-    throw new Error("Set SUPABASE_SERVICE_ROLE_KEY for owner-only account management.");
+    throw new Error("Set SUPABASE_SERVICE_ROLE_KEY for server-only administrative operations.");
   }
 
   return createClient(url, result.data, {
