@@ -23,6 +23,7 @@ Page and API entry points live in `src/app`; reusable UI is grouped by domain in
 - [Security architecture](./docs/SECURITY.md)
 - [Development guide](./docs/DEVELOPMENT.md)
 - [API reference](./docs/API.md)
+- [Testing checklist](./docs/TESTING.md)
 
 ## Run locally
 
