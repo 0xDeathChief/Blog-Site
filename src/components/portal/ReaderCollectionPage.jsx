@@ -29,7 +29,7 @@ export default async function ReaderCollectionPage({ kind }) {
 
   if (kind === "ai-conversations") {
     const { data, error } = await supabase.from("ai_conversations")
-      .select("id, title, created_at, updated_at, message_count")
+      .select("id, title, created_at, updated_at, ai_messages(id)")
       .eq("user_id", principal.id).order("updated_at", { ascending: false }).limit(100);
     if (error) throw new Error("Unable to load your AI conversations.", { cause: error });
     return (
@@ -37,7 +37,7 @@ export default async function ReaderCollectionPage({ kind }) {
         <div className="conversation-list">
           {(data ?? []).length ? (data ?? []).map((item) => (
             <article className="portal-card conversation-card" key={item.id}>
-              <div><h2>{item.title}</h2><p>{item.message_count} messages · Updated {formatDate(item.updated_at)}</p></div>
+              <div><h2>{item.title}</h2><p>{(item.ai_messages ?? []).length} messages · Updated {formatDate(item.updated_at)}</p></div>
               <a className="secondary-button" href={`/ai-conversations/${item.id}`}>Open conversation</a>
             </article>
           )) : <div className="empty-state portal-card"><strong>No saved conversations yet.</strong><p>Sign in while using the assistant to keep a private history of your learning chats.</p></div>}
@@ -47,9 +47,10 @@ export default async function ReaderCollectionPage({ kind }) {
   }
 
   if (kind === "comments") {
-    const { data, error } = await supabase.from("article_comments")
-      .select("id, body, created_at, articles!inner(title, slug, status)")
+    const { data, error } = await supabase.from("comments")
+      .select("id, body:content, created_at, articles!inner(title, slug, status)")
       .eq("user_id", principal.id).eq("articles.status", "published")
+      .eq("status", "published")
       .order("created_at", { ascending: false }).limit(200);
     if (error) throw new Error("Unable to load your comments.", { cause: error });
     const records = (data ?? []).map((item) => ({
@@ -63,13 +64,13 @@ export default async function ReaderCollectionPage({ kind }) {
     return <PortalFrame principal={principal} area={area} title={page.title} description={page.description}><PortalRecords records={records} empty="You have not posted any comments." /></PortalFrame>;
   }
 
-  const table = kind === "bookmarks" ? "article_bookmarks"
-    : kind === "likes" ? "article_likes"
+  const table = kind === "bookmarks" ? "bookmarks"
+    : kind === "likes" ? "likes"
       : "article_reading_history";
   const { data, error } = await supabase.from(table)
     .select(kind === "reading-history"
-      ? "last_read_at, articles!inner(id, author_id, title, slug, summary, published_at, reading_time_minutes, cover_image_path, categories(name, slug))"
-      : "created_at, articles!inner(id, author_id, title, slug, summary, published_at, reading_time_minutes, cover_image_path, categories(name, slug))")
+      ? "last_read_at, articles!inner(id, author_id, title, slug, summary:excerpt, published_at, reading_time_minutes:reading_time, cover_image_path:cover_image, categories(name, slug))"
+      : "created_at, articles!inner(id, author_id, title, slug, summary:excerpt, published_at, reading_time_minutes:reading_time, cover_image_path:cover_image, categories(name, slug))")
     .eq("user_id", principal.id)
     .eq("articles.status", "published")
     .order(kind === "reading-history" ? "last_read_at" : "created_at", { ascending: false })

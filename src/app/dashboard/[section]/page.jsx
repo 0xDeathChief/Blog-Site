@@ -22,13 +22,13 @@ export default async function ContributorSectionPage({ params }) {
   if (section === "profile") {
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select("display_name, avatar_url")
+      .select("display_name:full_name, avatar_url, username, bio")
       .eq("id", principal.id)
       .single();
     if (error) throw new Error("Unable to load your profile.", { cause: error });
     return (
       <PortalFrame principal={principal} area="contributor" title="Profile settings" description="Keep your author profile current.">
-        <section className="portal-card"><ProfileSettingsForm displayName={profile.display_name} avatarUrl={profile.avatar_url} /></section>
+        <section className="portal-card"><ProfileSettingsForm displayName={profile.display_name} username={profile.username} bio={profile.bio} avatarUrl={profile.avatar_url} /></section>
       </PortalFrame>
     );
   }
@@ -40,7 +40,7 @@ export default async function ContributorSectionPage({ params }) {
     const articleById = new Map((articles ?? []).map((article) => [article.id, article]));
     const articleIds = [...articleById.keys()];
     const { data: feedback, error } = articleIds.length
-      ? await supabase.from("editorial_feedback").select("id, article_id, reviewer_name, kind, message, created_at").in("article_id", articleIds).order("created_at", { ascending: false }).limit(100)
+      ? await supabase      .from("article_reviews").select("id, article_id, reviewer_name, kind:status, message:feedback, created_at").in("article_id", articleIds).order("created_at", { ascending: false }).limit(100)
       : { data: [], error: null };
     if (error) throw new Error("Unable to load review feedback.", { cause: error });
     const records = (feedback ?? []).map((item) => ({
@@ -60,7 +60,7 @@ export default async function ContributorSectionPage({ params }) {
   if (!config) notFound();
   const { data: articles, error } = await supabase
     .from("articles")
-    .select("id, author_id, title, slug, summary, status, reading_time_minutes, updated_at, categories(name)")
+    .select("id, author_id, title, slug, summary:excerpt, status, reading_time_minutes:reading_time, updated_at, categories(name)")
     .eq("author_id", principal.id)
     .in("status", config.statuses)
     .order("updated_at", { ascending: false })

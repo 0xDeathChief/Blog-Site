@@ -14,7 +14,7 @@ export async function GET(request) {
 
   let articleQuery = authorization.supabase
     .from("articles")
-    .select("id, author_id, title, slug, summary, status, difficulty, reading_time_minutes, category_id, updated_at, categories(name)")
+    .select("id, author_id, title, slug, summary:excerpt, status, difficulty, reading_time_minutes:reading_time, category_id, updated_at, categories(name)")
     .order("updated_at", { ascending: false })
     .limit(200);
   if (authorization.principal.role === "contributor") {
@@ -28,7 +28,7 @@ export async function GET(request) {
 
   const authorIds = [...new Set(articles.map((article) => article.author_id).filter(Boolean))];
   const { data: authors, error: authorError } = authorIds.length
-    ? await authorization.supabase.from("profiles").select("id, display_name").in("id", authorIds)
+    ? await authorization.supabase.from("profiles").select("id, display_name:full_name").in("id", authorIds)
     : { data: [], error: null };
   if (authorError) {
     return NextResponse.json({ error: "Unable to load article authors." }, { status: 502 });

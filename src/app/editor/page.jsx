@@ -13,14 +13,14 @@ export default async function EditorOverviewPage() {
   const supabase = await createSupabaseServerClient();
   const { data: articles, error } = await supabase
     .from("articles")
-    .select("id, author_id, title, slug, summary, status, reading_time_minutes, updated_at, categories(name)")
+    .select("id, author_id, title, slug, summary:excerpt, status, reading_time_minutes:reading_time, updated_at, categories(name)")
     .order("updated_at", { ascending: false })
     .limit(200);
   if (error) throw new Error("Unable to load the editorial overview.", { cause: error });
   const allArticles = articles ?? [];
   const authorIds = [...new Set(allArticles.map((article) => article.author_id).filter(Boolean))];
   const { data: profiles, error: profileError } = authorIds.length
-    ? await supabase.from("profiles").select("id, display_name").in("id", authorIds)
+    ? await supabase.from("profiles").select("id, display_name:full_name").in("id", authorIds)
     : { data: [], error: null };
   if (profileError) throw new Error("Unable to load contributor names.", { cause: profileError });
   const authorNames = new Map((profiles ?? []).map((profile) => [profile.id, profile.display_name]));

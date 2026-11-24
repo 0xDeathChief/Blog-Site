@@ -22,7 +22,7 @@ export default async function EditorSectionPage({ params }) {
   if (section === "review-history") {
     const [eventsResult, feedbackResult] = await Promise.all([
       supabase.from("article_events").select("id, action, actor_name, from_status, to_status, created_at, articles(title, slug)").order("created_at", { ascending: false }).limit(100),
-      supabase.from("editorial_feedback").select("id, reviewer_name, kind, message, created_at, articles(title, slug)").order("created_at", { ascending: false }).limit(100),
+      supabase.from("article_reviews").select("id, reviewer_name, kind:status, message:feedback, created_at, articles(title, slug)").order("created_at", { ascending: false }).limit(100),
     ]);
     if (eventsResult.error || feedbackResult.error) throw new Error("Unable to load review history.", { cause: eventsResult.error ?? feedbackResult.error });
     const records = [
@@ -49,7 +49,7 @@ export default async function EditorSectionPage({ params }) {
   if (!config) notFound();
   let query = supabase
     .from("articles")
-    .select("id, author_id, title, slug, summary, status, reading_time_minutes, updated_at, categories(name)")
+    .select("id, author_id, title, slug, summary:excerpt, status, reading_time_minutes:reading_time, updated_at, categories(name)")
     .order("updated_at", { ascending: false })
     .limit(200);
   if (config.statuses) query = query.in("status", config.statuses);
@@ -57,7 +57,7 @@ export default async function EditorSectionPage({ params }) {
   if (error) throw new Error(`Unable to load ${config.title.toLowerCase()}.`, { cause: error });
   const authorIds = [...new Set((articles ?? []).map((article) => article.author_id).filter(Boolean))];
   const { data: profiles, error: profileError } = authorIds.length
-    ? await supabase.from("profiles").select("id, display_name").in("id", authorIds)
+    ? await supabase.from("profiles").select("id, display_name:full_name").in("id", authorIds)
     : { data: [], error: null };
   if (profileError) throw new Error("Unable to load contributor names.", { cause: profileError });
   const authorNames = new Map((profiles ?? []).map((profile) => [profile.id, profile.display_name]));

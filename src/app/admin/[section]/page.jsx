@@ -67,14 +67,14 @@ export default async function AdminSectionPage({ params }) {
     </PortalFrame>;
   }
   if (section === "audit-logs") {
-    const { data, error } = await supabase.from("moderation_logs")
-      .select("id, actor_name, action, target_user_id, details, created_at")
+    const { data, error } = await supabase.from("audit_logs")
+      .select("id, user_name, action, entity_id, metadata, created_at")
       .order("created_at", { ascending: false }).limit(200);
     if (error) throw new Error("Unable to load administrative audit logs.", { cause: error });
     const records = (data ?? []).map((item) => ({
       ...item,
-      title: `${item.actor_name} · ${item.action}`,
-      details: item.details,
+      title: `${item.user_name} · ${item.action}`,
+      details: item.metadata,
     }));
     return <PortalFrame principal={principal} area="owner" title={title} description={description}><PortalRecords records={records} empty="No administrative events recorded yet." /></PortalFrame>;
   }
@@ -86,7 +86,7 @@ export default async function AdminSectionPage({ params }) {
     if (error) throw new Error("Unable to load featured-content candidates.", { cause: error });
     const authorIds = [...new Set((articles ?? []).map((article) => article.author_id).filter(Boolean))];
     const { data: profiles, error: profileError } = authorIds.length
-      ? await supabase.from("profiles").select("id, display_name").in("id", authorIds)
+      ? await supabase.from("profiles").select("id, display_name:full_name").in("id", authorIds)
       : { data: [], error: null };
     if (profileError) throw new Error("Unable to load article authors.", { cause: profileError });
     const names = new Map((profiles ?? []).map((profile) => [profile.id, profile.display_name]));
@@ -95,14 +95,14 @@ export default async function AdminSectionPage({ params }) {
 
   if (section === "articles" || section === "reviews") {
     let query = supabase.from("articles")
-      .select("id, author_id, title, slug, summary, status, reading_time_minutes, updated_at, categories(name)")
+      .select("id, author_id, title, slug, summary:excerpt, status, reading_time_minutes:reading_time, updated_at, categories(name)")
       .order("updated_at", { ascending: false }).limit(200);
     if (section === "reviews") query = query.in("status", ["submitted", "in_review", "revision_requested", "approved"]);
     const { data: articles, error } = await query;
     if (error) throw new Error("Unable to load administrative article records.", { cause: error });
     const authorIds = [...new Set((articles ?? []).map((article) => article.author_id).filter(Boolean))];
     const { data: profiles, error: profileError } = authorIds.length
-      ? await supabase.from("profiles").select("id, display_name").in("id", authorIds)
+      ? await supabase.from("profiles").select("id, display_name:full_name").in("id", authorIds)
       : { data: [], error: null };
     if (profileError) throw new Error("Unable to load article authors.", { cause: profileError });
     const names = new Map((profiles ?? []).map((profile) => [profile.id, profile.display_name]));

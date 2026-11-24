@@ -20,8 +20,8 @@ export async function GET(request) {
     return NextResponse.json({ error: "A valid article ID is required." }, { status: 400 });
   }
   const [bookmarkResult, likeResult] = await Promise.all([
-    context.supabase.from("article_bookmarks").select("article_id").eq("user_id", context.principal.id).eq("article_id", articleId).maybeSingle(),
-    context.supabase.from("article_likes").select("article_id").eq("user_id", context.principal.id).eq("article_id", articleId).maybeSingle(),
+    context.supabase.from("bookmarks").select("article_id").eq("user_id", context.principal.id).eq("article_id", articleId).maybeSingle(),
+    context.supabase.from("likes").select("article_id").eq("user_id", context.principal.id).eq("article_id", articleId).maybeSingle(),
   ]);
   if (bookmarkResult.error || likeResult.error) {
     return NextResponse.json({ error: "Unable to load your article activity." }, { status: 502 });
@@ -44,20 +44,20 @@ export async function POST(request) {
   const { action, articleId, body } = parsed.data;
   let result;
   if (action === "bookmark") {
-    result = await context.supabase.from("article_bookmarks").insert({
+    result = await context.supabase.from("bookmarks").insert({
       user_id: context.principal.id,
       article_id: articleId,
     });
   } else if (action === "like") {
-    result = await context.supabase.from("article_likes").insert({
+    result = await context.supabase.from("likes").insert({
       user_id: context.principal.id,
       article_id: articleId,
     });
   } else if (action === "comment") {
-    result = await context.supabase.from("article_comments").insert({
+    result = await context.supabase.from("comments").insert({
       user_id: context.principal.id,
       article_id: articleId,
-      body,
+      content: body,
     });
   } else {
     result = await context.supabase.from("article_reading_history").upsert(
@@ -86,7 +86,7 @@ export async function DELETE(request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Choose a valid activity to remove." }, { status: 400 });
   }
-  const table = parsed.data.action === "bookmark" ? "article_bookmarks" : "article_likes";
+  const table = parsed.data.action === "bookmark" ? "bookmarks" : "likes";
   const { error } = await context.supabase
     .from(table)
     .delete()

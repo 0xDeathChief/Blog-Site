@@ -163,7 +163,7 @@ async function getPublishedArticles() {
   const supabase = await createSupabaseServerClient();
   const { data: articles, error } = await supabase
     .from("articles")
-    .select("id, author_id, title, slug, summary, published_at, reading_time_minutes, cover_image_path, categories(name)")
+    .select("id, author_id, title, slug, summary:excerpt, published_at, reading_time_minutes:reading_time, cover_image_path:cover_image, categories(name)")
     .eq("status", "published")
     .order("published_at", { ascending: false })
     .limit(6);
@@ -201,7 +201,7 @@ async function getFeaturedArticle() {
   const supabase = await createSupabaseServerClient();
   const { data: article, error } = await supabase
     .from("articles")
-    .select("id, author_id, title, slug, summary, reading_time_minutes, categories(name)")
+    .select("id, author_id, title, slug, summary:excerpt, reading_time_minutes:reading_time, categories(name)")
     .eq("status", "published")
     .eq("is_featured", true)
     .order("published_at", { ascending: false })

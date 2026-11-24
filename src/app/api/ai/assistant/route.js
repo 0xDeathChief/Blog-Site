@@ -80,7 +80,7 @@ export async function POST(request) {
   if (input.articleSlug) {
     const { data, error } = await supabase
       .from("articles")
-      .select("title, summary, content")
+      .select("title, summary:excerpt, content")
       .eq("slug", input.articleSlug)
       .eq("status", "published")
       .maybeSingle();

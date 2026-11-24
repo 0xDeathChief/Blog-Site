@@ -34,7 +34,7 @@ export async function getCurrentPrincipal() {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, display_name, role, status")
+    .select("id, display_name:full_name, role, status")
     .eq("id", authData.user.id)
     .maybeSingle();
 

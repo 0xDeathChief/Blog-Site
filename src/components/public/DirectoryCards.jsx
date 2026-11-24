@@ -16,9 +16,9 @@ export default function DirectoryCards({ items, type }) {
         return (
           <Link className="directory-card" href={href} key={item.id ?? item.author_id}>
             <span className="directory-avatar" aria-hidden="true">
-              {type === "authors" ? (item.display_name?.charAt(0) ?? "C").toUpperCase() : item.name?.charAt(0).toUpperCase()}
+              {type === "authors" ? (item.full_name?.charAt(0) ?? "C").toUpperCase() : item.name?.charAt(0).toUpperCase()}
             </span>
-            <strong>{item.display_name ?? item.name}</strong>
+            <strong>{item.full_name ?? item.name}</strong>
             <span>{count} {countLabel}</span>
           </Link>
         );

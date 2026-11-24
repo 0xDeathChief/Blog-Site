@@ -13,7 +13,7 @@ export default async function ContributorOverviewPage() {
   const supabase = await createSupabaseServerClient();
   const { data: articles, error } = await supabase
     .from("articles")
-    .select("id, author_id, title, slug, summary, status, reading_time_minutes, updated_at, categories(name)")
+    .select("id, author_id, title, slug, summary:excerpt, status, reading_time_minutes:reading_time, updated_at, categories(name)")
     .eq("author_id", principal.id)
     .order("updated_at", { ascending: false })
     .limit(100);

@@ -19,7 +19,7 @@ export async function getPublishedArticles({
   const supabase = await createSupabaseServerClient();
   let articleQuery = supabase
     .from("articles")
-    .select("id, author_id, title, slug, summary, published_at, reading_time_minutes, difficulty, cover_image_path, categories(name, slug), article_tags(tags(name, slug))")
+    .select("id, author_id, title, slug, summary:excerpt, published_at, reading_time_minutes:reading_time, difficulty, cover_image_path:cover_image, categories(name, slug), article_tags(tags(name, slug))")
     .eq("status", "published")
     .order("published_at", { ascending: false })
     .limit(limit);

@@ -17,7 +17,7 @@ export default async function PublishedArticlePage({ params }) {
   const supabase = await createSupabaseServerClient();
   const { data: article, error } = await supabase
     .from("articles")
-    .select("id, author_id, title, slug, summary, content, difficulty, reading_time_minutes, published_at, cover_image_path, categories(name), article_tags(tags(id, name, slug))")
+    .select("id, author_id, title, slug, summary:excerpt, content, difficulty, reading_time_minutes:reading_time, published_at, cover_image_path:cover_image, categories(name, slug), article_tags(tags(id, name, slug))")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
@@ -29,7 +29,7 @@ export default async function PublishedArticlePage({ params }) {
 
   const [authorsResult, commentsResult, principal] = await Promise.all([
     supabase.rpc("get_published_article_authors", { article_ids: [article.id] }),
-    supabase.from("article_comments").select("id, body, created_at").eq("article_id", article.id).order("created_at", { ascending: true }).limit(100),
+    supabase.from("comments").select("id, body:content, created_at").eq("article_id", article.id).eq("status", "published").order("created_at", { ascending: true }).limit(100),
     getCurrentPrincipal(),
   ]);
   if (authorsResult.error) throw new Error("Unable to load the article author.", { cause: authorsResult.error });

@@ -15,7 +15,7 @@ export default async function AuthorProfilePage({ params }) {
   const author = authors[0];
   if (!author) notFound();
   return (
-    <PublicPage kicker="AUTHOR PROFILE" title={author.display_name} description={`${author.article_count} published ${author.article_count === 1 ? "article" : "articles"} contributed to CipherBrief.`}>
+    <PublicPage kicker="AUTHOR PROFILE" title={author.full_name} description={`${author.article_count} published ${author.article_count === 1 ? "article" : "articles"} contributed to CipherBrief.`}>
       <ArticleCards articles={articles} emptyMessage="This author has no published articles yet." />
     </PublicPage>
   );

@@ -13,6 +13,7 @@ import {
   translationRequestSchema,
 } from "@/lib/ai/translation";
 import { readJsonBody } from "@/lib/auth/api";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const maxDuration = 300;
@@ -60,7 +61,7 @@ export async function POST(request) {
 
     const { data: article, error } = await supabase
       .from("articles")
-      .select("title, summary, content")
+      .select("id, title, summary:excerpt, content")
       .eq("slug", input.articleSlug)
       .eq("status", "published")
       .maybeSingle();
@@ -69,6 +70,25 @@ export async function POST(request) {
     }
     if (!article) {
       return NextResponse.json({ error: "Published article not found." }, { status: 404 });
+    }
+
+    if (input.kind === "article") {
+      const { data: savedTranslation, error: translationError } = await supabase
+        .from("article_translations")
+        .select("translated_content")
+        .eq("article_id", article.id)
+        .eq("language", input.targetLanguage)
+        .eq("style", input.style)
+        .maybeSingle();
+      if (translationError) {
+        return NextResponse.json({ error: "Unable to load the saved article translation." }, { status: 502 });
+      }
+      if (savedTranslation) {
+        return NextResponse.json({
+          kind: "document",
+          ...savedTranslation.translated_content,
+        }, { headers: noStoreHeaders });
+      }
     }
 
     if (input.kind === "selection") {
@@ -86,6 +106,21 @@ export async function POST(request) {
 
     const translatedContent = await translateArticleDocument(article.content, input);
     const translatedMetadata = await translateArticleMetadata(article.title, article.summary, input);
+    const adminClient = createSupabaseAdminClient();
+    const { error: saveError } = await adminClient.rpc("save_article_translation", {
+      target_article_id: article.id,
+      target_language: input.targetLanguage,
+      target_style: input.style,
+      translation_document: {
+        title: translatedMetadata.title,
+        summary: translatedMetadata.summary,
+        content: translatedContent,
+      },
+    });
+    if (saveError) {
+      console.error("Unable to persist the generated article translation.", saveError);
+      return NextResponse.json({ error: "The translation was generated, but could not be saved separately from the original article." }, { status: 502 });
+    }
     return NextResponse.json({
       kind: "document",
       content: translatedContent,

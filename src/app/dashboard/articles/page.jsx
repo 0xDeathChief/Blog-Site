@@ -13,7 +13,7 @@ export default async function ArticlesPage() {
   const supabase = await createSupabaseServerClient();
   let articleQuery = supabase
     .from("articles")
-    .select("id, author_id, title, slug, summary, status, difficulty, reading_time_minutes, updated_at, categories(name)")
+    .select("id, author_id, title, slug, summary:excerpt, status, difficulty, reading_time_minutes:reading_time, updated_at, categories(name)")
     .order("updated_at", { ascending: false })
     .limit(200);
   if (principal.role === "contributor") {
@@ -24,7 +24,7 @@ export default async function ArticlesPage() {
 
   const authorIds = [...new Set((articles ?? []).map((article) => article.author_id).filter(Boolean))];
   const { data: authors, error: authorError } = authorIds.length
-    ? await supabase.from("profiles").select("id, display_name").in("id", authorIds)
+    ? await supabase.from("profiles").select("id, display_name:full_name").in("id", authorIds)
     : { data: [], error: null };
   if (authorError) throw new Error("Unable to load article authors.", { cause: authorError });
   const authorById = new Map((authors ?? []).map((author) => [author.id, author.display_name]));

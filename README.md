@@ -25,10 +25,11 @@ Open http://localhost:3000. The public homepage works without external credentia
 ## Supabase and RBAC setup
 
 1. Create a Supabase project and configure its Auth email/invite provider.
-2. Apply both migrations in timestamp order using the Supabase SQL Editor or your Supabase migration workflow:
+2. Apply all migrations in timestamp order using the Supabase SQL Editor or your Supabase migration workflow:
    - [`20261124170000_roles_and_editorial_workflow.sql`](./supabase/migrations/20261124170000_roles_and_editorial_workflow.sql)
    - [`20261124233000_article_management.sql`](./supabase/migrations/20261124233000_article_management.sql)
    - [`20261125010000_community_pages.sql`](./supabase/migrations/20261125010000_community_pages.sql)
+   - [`20261125020000_normalized_community_schema.sql`](./supabase/migrations/20261125020000_normalized_community_schema.sql)
 3. Copy the project URL, publishable key, and service-role key into `.env.local`. The service-role key is server-only and must never use a `NEXT_PUBLIC_` prefix.
 4. Create the first account in Supabase Auth. In the SQL Editor, promote that account exactly once using its Auth user UUID:
 
@@ -42,7 +43,39 @@ Open http://localhost:3000. The public homepage works without external credentia
 
    Confirm that exactly one row changed. After bootstrap, use the owner-only account API to invite and manage users.
 
-The migrations create the four roles, article workflow, feedback/revision history, moderation logs, settings, seeded starter categories/tags, and the cover-image bucket. They enable RLS, restrict profile role changes to an owner-checked RPC, and limit article state transitions and snapshots to guarded database functions. The API verifies sessions and roles on the server, checks request origin for mutations, validates cover-image content, and sanitizes article documents before saving.
+The migrations create the four roles, article workflow, review/revision history, audit records, settings, seeded starter categories/tags, and the cover-image bucket. The final migration normalizes profile, article, review, comment, engagement, AI-message, translation, and audit fields while preserving existing records. It enables RLS, prevents users from changing their own role, restricts role updates to an owner-checked function, and limits article state transitions and snapshots to guarded database functions. The API verifies sessions and roles on the server, checks request origin for mutations, validates cover-image content, and sanitizes article documents before saving.
+
+### Database relationships
+
+```mermaid
+erDiagram
+  profiles ||--o{ articles : authors
+  categories ||--o{ articles : classifies
+  articles ||--o{ article_tags : has
+  tags ||--o{ article_tags : labels
+  articles ||--o{ article_reviews : receives
+  profiles o|--o{ article_reviews : reviews
+  articles ||--o{ article_revisions : snapshots
+  profiles o|--o{ article_revisions : edits
+  articles ||--o{ comments : receives
+  profiles o|--o{ comments : writes
+  comments o|--o{ comments : replies
+  profiles ||--o{ bookmarks : saves
+  articles ||--o{ bookmarks : saved_by
+  profiles ||--o{ likes : gives
+  articles ||--o{ likes : liked_by
+  profiles ||--o{ ai_conversations : owns
+  ai_conversations ||--o{ ai_messages : contains
+  articles ||--o{ article_translations : translated_as
+  profiles o|--o{ audit_logs : performs
+```
+
+- A profile can author many articles; each article has one optional category. Deleting a category keeps its articles and clears their category reference.
+- `article_tags` is the join table that lets one article have many tags and one tag label many articles. Its two foreign keys prevent dangling links.
+- Reviews and revisions belong to an article. A review records the reviewer, decision/feedback, and date; a revision stores a numbered content snapshot and editor.
+- Comments belong to an article and may point to a parent comment for replies. Bookmarks and likes connect readers to articles; unique user/article constraints prevent duplicates.
+- A conversation belongs to one user and contains separate messages. Article translations are stored independently by article, language, and style, so translated text never overwrites the original.
+- Audit logs identify the acting profile when available. `entity_id` is intentionally polymorphic (it may identify a user, article, or another entity), so it is not a foreign key to one specific table.
 
 ## Article workflow
 
@@ -77,7 +110,7 @@ The assistant requires both a working Ollama model and configured Supabase crede
 
 ## Translation
 
-Published article readers can translate a full article or selected text into English or Bangla. Bangla styles include simple, professional, and Bangla with English technical terms. AI responses can also be translated from their message controls. Translations are generated on demand and held only in the current page; they never replace or update the published article.
+Published article readers can translate a full article or selected text into English or Bangla. Bangla styles include simple, professional, and Bangla with English technical terms. AI responses can also be translated from their message controls. Full-article translations are saved separately by article, language, and style and reused on later requests; editing an article clears those cached translations. Selected passages and AI responses are generated on demand. No translation replaces or updates the original article.
 
 Article translation rebuilds only text nodes in the existing Tiptap document, preserving headings, lists, tables, links, and other formatting. Code blocks and inline code remain unchanged; URLs, command flags, and parameter-like values are protected. Translation requests use the same local Ollama model and server-side rate limits as the assistant.
 

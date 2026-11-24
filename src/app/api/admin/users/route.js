@@ -18,7 +18,7 @@ export async function GET(request) {
   for (let offset = 0; ; offset += 1000) {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, display_name, role, status, created_at")
+      .select("id, display_name:full_name, role, status, created_at")
       .order("created_at", { ascending: false })
       .range(offset, offset + 999);
 

@@ -15,14 +15,14 @@ export default async function ArticlePage({ params }) {
   const [articleResult, categoriesResult, tagsResult, revisionsResult, eventsResult, feedbackResult] = await Promise.all([
     supabase
       .from("articles")
-      .select("id, author_id, title, slug, summary, content, status, difficulty, reading_time_minutes, category_id, cover_image_path, updated_at, categories(name), article_tags(tag_id, tags(id, name, slug))")
+      .select("id, author_id, title, slug, summary:excerpt, content, status, difficulty, reading_time_minutes:reading_time, category_id, cover_image_path:cover_image, updated_at, categories(name), article_tags(tag_id, tags(id, name, slug))")
       .eq("id", articleId)
       .maybeSingle(),
     supabase.from("categories").select("id, name").eq("is_active", true).order("name"),
     supabase.from("tags").select("id, name").order("name"),
     supabase
       .from("article_revisions")
-      .select("id, title, slug, summary, difficulty, reading_time_minutes, tags, created_at")
+      .select("id, revision_number, title, slug, summary:excerpt, difficulty, reading_time_minutes:reading_time, tags, created_at")
       .eq("article_id", articleId)
       .order("created_at", { ascending: false })
       .limit(50),
@@ -33,8 +33,8 @@ export default async function ArticlePage({ params }) {
       .order("created_at", { ascending: false })
       .limit(100),
     supabase
-      .from("editorial_feedback")
-      .select("id, reviewer_name, kind, message, created_at")
+      .from("article_reviews")
+      .select("id, reviewer_name, kind:status, message:feedback, previous_status, new_status, created_at")
       .eq("article_id", articleId)
       .order("created_at", { ascending: false })
       .limit(100),
@@ -54,7 +54,7 @@ export default async function ArticlePage({ params }) {
   }
 
   const { data: author, error: authorError } = articleResult.data.author_id
-    ? await supabase.from("profiles").select("display_name").eq("id", articleResult.data.author_id).maybeSingle()
+    ? await supabase.from("profiles").select("display_name:full_name").eq("id", articleResult.data.author_id).maybeSingle()
     : { data: null, error: null };
   if (authorError) throw new Error("Unable to load the article author.", { cause: authorError });
 

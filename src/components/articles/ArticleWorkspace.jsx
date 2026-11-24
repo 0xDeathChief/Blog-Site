@@ -372,12 +372,13 @@ function HistoryPanel({ events, feedback, revisions }) {
             <article className="history-feedback" key={`feedback-${item.id}`}>
               <strong>{item.reviewer_name} · {formatStatus(item.kind)}</strong>
               <p>{item.message}</p>
+              {item.previous_status && <small>{formatStatus(item.previous_status)} → {formatStatus(item.new_status)}</small>}
               <time dateTime={item.created_at}>{formatDate(item.created_at)}</time>
             </article>
           ))}
           {revisions.map((revision) => (
             <details className="revision-item" key={`revision-${revision.id}`}>
-              <summary>{revision.title} <time dateTime={revision.created_at}>{formatDate(revision.created_at)}</time></summary>
+              <summary>Revision {revision.revision_number}: {revision.title} <time dateTime={revision.created_at}>{formatDate(revision.created_at)}</time></summary>
               <p>{revision.summary}</p>
               <small>/{revision.slug} · {capitalize(revision.difficulty)} · {revision.reading_time_minutes} min read · {revision.tags.map((tag) => tag.name).join(", ") || "No tags"}</small>
             </details>

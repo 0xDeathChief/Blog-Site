@@ -20,12 +20,17 @@ export async function GET(request) {
   if (context.response) return context.response;
   const { data, error } = await context.supabase
     .from("ai_conversations")
-    .select("id, title, created_at, updated_at, message_count")
+    .select("id, title, created_at, updated_at, ai_messages(id)")
     .eq("user_id", context.principal.id)
     .order("updated_at", { ascending: false })
     .limit(100);
   if (error) return NextResponse.json({ error: "Unable to load conversation history." }, { status: 502 });
-  return NextResponse.json({ conversations: data });
+  return NextResponse.json({
+    conversations: data.map(({ ai_messages: messages = [], ...conversation }) => ({
+      ...conversation,
+      message_count: messages.length,
+    })),
+  });
 }
 
 export async function POST(request) {
@@ -36,24 +41,18 @@ export async function POST(request) {
   const parsed = conversationSchema.safeParse(parsedBody.body);
   if (!parsed.success) return NextResponse.json({ error: "This conversation is too large or contains invalid messages." }, { status: 400 });
 
-  const values = {
-    title: parsed.data.title,
-    message_count: parsed.data.messages.length,
-    messages: parsed.data.messages,
-    user_id: context.principal.id,
-  };
-  if (!parsed.data.id) {
-    const { count, error: countError } = await context.supabase
-      .from("ai_conversations")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", context.principal.id);
-    if (countError) return NextResponse.json({ error: "Unable to verify your conversation limit." }, { status: 502 });
-    if (count >= 100) return NextResponse.json({ error: "Conversation history is full. Delete an older conversation before starting another." }, { status: 409 });
+  const { data: conversationId, error } = await context.supabase.rpc("save_ai_conversation", {
+    target_conversation_id: parsed.data.id ?? null,
+    conversation_title: parsed.data.title,
+    message_values: parsed.data.messages,
+  });
+  if (error) {
+    const status = error.code === "P0002" ? 404 : error.code === "22023" ? 400 : error.code === "42501" ? 403 : 502;
+    return NextResponse.json({
+      error: status === 404 ? "Conversation not found."
+        : status === 400 ? "This conversation is too large or your history limit has been reached."
+          : "Unable to save this conversation.",
+    }, { status });
   }
-  const result = parsed.data.id
-    ? await context.supabase.from("ai_conversations").update(values).eq("id", parsed.data.id).eq("user_id", context.principal.id).select("id").maybeSingle()
-    : await context.supabase.from("ai_conversations").insert(values).select("id").single();
-  if (result.error) return NextResponse.json({ error: "Unable to save this conversation." }, { status: 502 });
-  if (!result.data) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
-  return NextResponse.json({ id: result.data.id });
+  return NextResponse.json({ id: conversationId });
 }

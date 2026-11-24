@@ -20,7 +20,7 @@ export async function GET(request, context) {
 
   const { data: article, error } = await authorization.supabase
     .from("articles")
-    .select("id, author_id, title, slug, summary, content, status, difficulty, reading_time_minutes, category_id, cover_image_path, updated_at, categories(name), article_tags(tag_id, tags(id, name, slug))")
+    .select("id, author_id, title, slug, summary:excerpt, content, status, difficulty, reading_time_minutes:reading_time, category_id, cover_image_path:cover_image, updated_at, categories(name), article_tags(tag_id, tags(id, name, slug))")
     .eq("id", articleId)
     .maybeSingle();
 
@@ -36,7 +36,7 @@ export async function GET(request, context) {
   const [revisions, events, feedback] = await Promise.all([
     authorization.supabase
       .from("article_revisions")
-      .select("id, actor_id, title, slug, summary, category_id, cover_image_path, difficulty, reading_time_minutes, tags, created_at")
+      .select("id, actor_id:editor_id, revision_number, title, slug, summary:excerpt, category_id, cover_image_path:cover_image, difficulty, reading_time_minutes:reading_time, tags, created_at")
       .eq("article_id", articleId)
       .order("created_at", { ascending: false })
       .limit(50),
@@ -47,8 +47,8 @@ export async function GET(request, context) {
       .order("created_at", { ascending: false })
       .limit(100),
     authorization.supabase
-      .from("editorial_feedback")
-      .select("id, editor_id, reviewer_name, kind, message, created_at")
+      .from("article_reviews")
+      .select("id, editor_id:reviewer_id, reviewer_name, kind:status, message:feedback, previous_status, new_status, created_at")
       .eq("article_id", articleId)
       .order("created_at", { ascending: false })
       .limit(100),

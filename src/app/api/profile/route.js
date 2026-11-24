@@ -4,6 +4,8 @@ import { readJsonBody, requireRoleApi } from "@/lib/auth/api";
 
 const profileSchema = z.object({
   displayName: z.string().trim().min(1).max(80),
+  username: z.string().trim().min(1).max(64).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  bio: z.string().trim().max(500),
   avatarUrl: z.string().trim().max(500).url().or(z.literal("")).optional(),
 }).strict();
 
@@ -22,8 +24,18 @@ export async function PATCH(request) {
   }
   const { error } = await context.supabase
     .from("profiles")
-    .update({ display_name: parsed.data.displayName, avatar_url: avatarUrl })
+    .update({
+      full_name: parsed.data.displayName,
+      username: parsed.data.username,
+      bio: parsed.data.bio,
+      avatar_url: avatarUrl,
+    })
     .eq("id", context.principal.id);
-  if (error) return NextResponse.json({ error: "Unable to update your profile." }, { status: 502 });
+  if (error) {
+    const status = error.code === "23505" ? 409 : error.code === "23514" ? 400 : 502;
+    return NextResponse.json({
+      error: status === 409 ? "That username is already in use." : status === 400 ? "The profile details are invalid." : "Unable to update your profile.",
+    }, { status });
+  }
   return NextResponse.json({ status: "updated" });
 }
