@@ -4,7 +4,7 @@ A cybersecurity publication and learning-community project, built with the Next.
 
 ## Stack
 
-- JavaScript and JSX; server components by default, client components for interactive navigation and search.
+- JavaScript and JSX; server components by default, client components only for interactive navigation.
 - Tailwind CSS 4, DaisyUI, and Lucide React.
 - Supabase PostgreSQL, Authentication, and Storage through `@supabase/ssr`.
 - Zod for validating configuration and future user input.
@@ -30,6 +30,7 @@ Open http://localhost:3000. The public homepage works without external credentia
    - [`20261124233000_article_management.sql`](./supabase/migrations/20261124233000_article_management.sql)
    - [`20261125010000_community_pages.sql`](./supabase/migrations/20261125010000_community_pages.sql)
    - [`20261125020000_normalized_community_schema.sql`](./supabase/migrations/20261125020000_normalized_community_schema.sql)
+   - [`20261125030000_search_discovery.sql`](./supabase/migrations/20261125030000_search_discovery.sql)
 3. Copy the project URL, publishable key, and service-role key into `.env.local`. The service-role key is server-only and must never use a `NEXT_PUBLIC_` prefix.
 4. Create the first account in Supabase Auth. In the SQL Editor, promote that account exactly once using its Auth user UUID:
 
@@ -44,6 +45,8 @@ Open http://localhost:3000. The public homepage works without external credentia
    Confirm that exactly one row changed. After bootstrap, use the owner-only account API to invite and manage users.
 
 The migrations create the four roles, article workflow, review/revision history, audit records, settings, seeded starter categories/tags, and the cover-image bucket. The final migration normalizes profile, article, review, comment, engagement, AI-message, translation, and audit fields while preserving existing records. It enables RLS, prevents users from changing their own role, restricts role updates to an owner-checked function, and limits article state transitions and snapshots to guarded database functions. The API verifies sessions and roles on the server, checks request origin for mutations, validates cover-image content, and sanitizes article documents before saving.
+
+The search migration adds a PostgreSQL full-text index and a public-only search function. It searches article text and topic/tag names, applies filters and popularity sorting in the database, and returns bounded pages so unpublished articles are not exposed.
 
 ### Database relationships
 

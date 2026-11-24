@@ -1,15 +1,24 @@
-import ArticleCards from "@/components/public/ArticleCards";
+import ArticleDiscovery from "@/components/public/ArticleDiscovery";
 import PublicPage from "@/components/public/PublicPage";
-import { getPublishedArticles } from "@/lib/articles/public";
+import {
+  getArticleDiscoveryOptions,
+  getPublishedArticlePage,
+  parseArticleDiscoveryFilters,
+} from "@/lib/articles/public";
 
 export const metadata = { title: "Articles — CipherBrief" };
 export const dynamic = "force-dynamic";
 
-export default async function ArticlesListingPage() {
-  const articles = await getPublishedArticles();
+export default async function ArticlesListingPage({ searchParams }) {
+  const params = await searchParams;
+  const filters = parseArticleDiscoveryFilters(params);
+  const [results, options] = await Promise.all([
+    getPublishedArticlePage(filters),
+    getArticleDiscoveryOptions(),
+  ]);
   return (
     <PublicPage kicker="THE BRIEF" title="Security writing, carefully reviewed." description="Browse practical guides and research shared by the CipherBrief community.">
-      <ArticleCards articles={articles} />
+      <ArticleDiscovery results={results} filters={filters} options={options} action="/articles" />
     </PublicPage>
   );
 }

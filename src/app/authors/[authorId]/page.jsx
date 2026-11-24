@@ -1,22 +1,29 @@
 import { notFound } from "next/navigation";
-import ArticleCards from "@/components/public/ArticleCards";
+import ArticleDiscovery from "@/components/public/ArticleDiscovery";
 import PublicPage from "@/components/public/PublicPage";
-import { getPublishedArticles, getPublicAuthors } from "@/lib/articles/public";
+import {
+  getArticleDiscoveryOptions,
+  getPublishedArticlePage,
+  getPublicAuthors,
+  parseArticleDiscoveryFilters,
+} from "@/lib/articles/public";
 
 export const dynamic = "force-dynamic";
 
-export default async function AuthorProfilePage({ params }) {
-  const { authorId } = await params;
+export default async function AuthorProfilePage({ params, searchParams }) {
+  const [{ authorId }, queryParams] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(authorId)) notFound();
-  const [authors, articles] = await Promise.all([
+  const [options, authors] = await Promise.all([
+    getArticleDiscoveryOptions(),
     getPublicAuthors(authorId),
-    getPublishedArticles({ authorId }),
   ]);
   const author = authors[0];
   if (!author) notFound();
+  const filters = { ...parseArticleDiscoveryFilters(queryParams), authorId };
+  const results = await getPublishedArticlePage(filters);
   return (
     <PublicPage kicker="AUTHOR PROFILE" title={author.full_name} description={`${author.article_count} published ${author.article_count === 1 ? "article" : "articles"} contributed to CipherBrief.`}>
-      <ArticleCards articles={articles} emptyMessage="This author has no published articles yet." />
+      <ArticleDiscovery results={results} filters={filters} options={options} action="/articles" emptyMessage="This author has no published articles yet." />
     </PublicPage>
   );
 }

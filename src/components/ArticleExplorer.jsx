@@ -1,23 +1,8 @@
-"use client";
-
-import { useMemo, useState } from "react";
 import { ArrowRight, Search, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function ArticleExplorer({ articles }) {
-  const [query, setQuery] = useState("");
-  const filteredArticles = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return articles;
-
-    return articles.filter((article) =>
-      `${article.title} ${article.excerpt} ${article.category} ${article.author}`
-        .toLowerCase()
-        .includes(normalizedQuery),
-    );
-  }, [articles, query]);
-
   return (
     <section className="latest-section" id="latest">
       <div className="shell">
@@ -27,23 +12,23 @@ export default function ArticleExplorer({ articles }) {
             <h2 id="topics">Latest intelligence</h2>
           </div>
           <Link className="all-articles-link" href="/articles">Browse all articles <ArrowRight size={15} /></Link>
-          <label className="article-search">
+          <form className="article-search" action="/search" method="get">
             <Search size={17} aria-hidden="true" />
             <input
               id="article-search"
-              className="input input-bordered"
               type="search"
+              name="q"
+              maxLength={100}
               placeholder="Search stories"
               aria-label="Search articles"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
             />
-          </label>
+            <button type="submit" aria-label="Submit article search"><ArrowRight size={15} /></button>
+          </form>
         </div>
 
-        {filteredArticles.length > 0 ? (
+        {articles.length > 0 ? (
           <div className="article-grid">
-            {filteredArticles.map((article) => (
+            {articles.map((article) => (
               <Link className="article-card" href={`/articles/${article.slug}`} key={article.slug}>
                 <div className={`article-art ${article.accent}`}>
                   {article.coverUrl ? (
@@ -68,22 +53,10 @@ export default function ArticleExplorer({ articles }) {
             ))}
           </div>
         ) : (
-          <div className="empty-state" role="status">
+          <div className="empty-state">
             <Search size={20} aria-hidden="true" />
-            {articles.length ? (
-              <>
-                <strong>No articles match “{query}”.</strong>
-                <p>Try a different title, topic, or author.</p>
-                <button className="btn btn-ghost" type="button" onClick={() => setQuery("")}>
-                  Clear search <ArrowRight size={15} />
-                </button>
-              </>
-            ) : (
-              <>
-                <strong>No published articles yet.</strong>
-                <p>Approved community research will appear here after publication.</p>
-              </>
-            )}
+            <strong>No published articles yet.</strong>
+            <p>Approved community research will appear here after publication.</p>
           </div>
         )}
       </div>
