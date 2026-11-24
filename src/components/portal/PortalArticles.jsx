@@ -1,0 +1,51 @@
+import Link from "next/link";
+
+export default function PortalArticles({ articles, empty = "No articles in this view." }) {
+  return (
+    <section className="portal-card portal-table-card">
+      {articles.length ? (
+        <div className="portal-table-scroll">
+          <table className="portal-table">
+            <thead><tr><th>Article</th><th>Author</th><th>Status</th><th>Updated</th><th /></tr></thead>
+            <tbody>
+              {articles.map((article) => (
+                <tr key={article.id}>
+                  <td><Link href={`/dashboard/articles/${article.id}`}>{article.title}</Link><small>{article.categories?.name ?? "Uncategorized"} · {article.reading_time_minutes} min read</small></td>
+                  <td>{article.author_name ?? "You"}</td>
+                  <td><span className={`status-pill status-${article.status}`}>{article.status.replaceAll("_", " ")}</span></td>
+                  <td>{formatDate(article.updated_at)}</td>
+                  <td><Link className="row-action" href={`/dashboard/articles/${article.id}`}>Open</Link></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : <div className="empty-state"><strong>{empty}</strong><p>Articles that match this workflow will appear here.</p></div>}
+    </section>
+  );
+}
+
+export function PortalStats({ stats }) {
+  return <section className="portal-stats">{stats.map(([label, value]) => <article key={label}><span>{label}</span><strong>{value}</strong></article>)}</section>;
+}
+
+export function PortalRecords({ records, empty = "No records yet." }) {
+  return (
+    <section className="portal-card portal-record-list">
+      {records.length ? records.map((item) => (
+        <article key={item.id}>
+          <div><strong>{item.title ?? item.action ?? item.kind ?? "Activity"}</strong>{item.articleTitle && <Link href={`/articles/${item.articleSlug}`}>{item.articleTitle}</Link>}</div>
+          {item.message && <p>{item.message}</p>}
+          {item.details && <p>{JSON.stringify(item.details)}</p>}
+          <time dateTime={item.created_at}>{formatDate(item.created_at)}</time>
+        </article>
+      )) : <div className="empty-state"><strong>{empty}</strong></div>}
+    </section>
+  );
+}
+
+function formatDate(value) {
+  return value
+    ? new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value))
+    : "—";
+}

@@ -26,6 +26,7 @@ export default function ArticleExplorer({ articles }) {
             <span className="section-kicker">THE BRIEF</span>
             <h2 id="topics">Latest intelligence</h2>
           </div>
+          <Link className="all-articles-link" href="/articles">Browse all articles <ArrowRight size={15} /></Link>
           <label className="article-search">
             <Search size={17} aria-hidden="true" />
             <input

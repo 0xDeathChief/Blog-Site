@@ -1,6 +1,7 @@
 import "server-only";
 
 import { z } from "zod";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const requestSchema = z.object({
   prompt: z.string().trim().min(1).max(4000),
@@ -9,7 +10,7 @@ const requestSchema = z.object({
 
 const configSchema = z.object({
   baseUrl: z.string().url(),
-  model: z.string().trim().min(1).max(128),
+  model: z.string().trim().min(1).max(128).optional(),
 });
 
 const responseSchema = z.object({
@@ -36,19 +37,36 @@ export class OllamaRequestError extends Error {
   }
 }
 
-function getOllamaConfig() {
+async function getOllamaConfig() {
   const config = configSchema.safeParse({
     baseUrl: process.env.OLLAMA_BASE_URL,
     model: process.env.OLLAMA_MODEL,
   });
   if (!config.success) {
-    throw new OllamaRequestError("configuration", "Set a valid OLLAMA_BASE_URL and OLLAMA_MODEL.");
+    throw new OllamaRequestError("configuration", "Set a valid OLLAMA_BASE_URL.");
   }
   const baseUrl = new URL(config.data.baseUrl);
   if (!["http:", "https:"].includes(baseUrl.protocol)) {
     throw new OllamaRequestError("configuration", "OLLAMA_BASE_URL must use HTTP or HTTPS.");
   }
-  return { ...config.data, baseUrl };
+  let settings;
+  try {
+    const adminClient = createSupabaseAdminClient();
+    const { data, error } = await adminClient.rpc("get_ai_runtime_settings");
+    if (error) throw error;
+    settings = data?.[0] ?? null;
+  } catch (error) {
+    console.error("Unable to load the server-side AI configuration.", error);
+    throw new OllamaRequestError("configuration", "Unable to load the AI configuration.");
+  }
+  if (settings && !settings.enabled) {
+    throw new OllamaRequestError("disabled", "The learning assistant is disabled by the site owner.");
+  }
+  const model = settings?.model_name ?? config.data.model;
+  if (!model) {
+    throw new OllamaRequestError("configuration", "Configure an AI model in the owner dashboard or set OLLAMA_MODEL.");
+  }
+  return { ...config.data, model, baseUrl };
 }
 
 export async function generateWithOllama(input) {
@@ -57,7 +75,7 @@ export async function generateWithOllama(input) {
     throw new Error("The Ollama prompt is invalid.");
   }
 
-  const config = getOllamaConfig();
+  const config = await getOllamaConfig();
   const endpoint = new URL("/api/generate", config.baseUrl);
   const response = await fetch(endpoint, {
     method: "POST",
@@ -89,7 +107,7 @@ export async function generateChatWithOllama(input) {
     throw new OllamaRequestError("invalid_request", "The local AI request is invalid.");
   }
 
-  const config = getOllamaConfig();
+  const config = await getOllamaConfig();
   let response;
   try {
     response = await fetch(new URL("/api/chat", config.baseUrl), {

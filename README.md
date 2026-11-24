@@ -28,6 +28,7 @@ Open http://localhost:3000. The public homepage works without external credentia
 2. Apply both migrations in timestamp order using the Supabase SQL Editor or your Supabase migration workflow:
    - [`20261124170000_roles_and_editorial_workflow.sql`](./supabase/migrations/20261124170000_roles_and_editorial_workflow.sql)
    - [`20261124233000_article_management.sql`](./supabase/migrations/20261124233000_article_management.sql)
+   - [`20261125010000_community_pages.sql`](./supabase/migrations/20261125010000_community_pages.sql)
 3. Copy the project URL, publishable key, and service-role key into `.env.local`. The service-role key is server-only and must never use a `NEXT_PUBLIC_` prefix.
 4. Create the first account in Supabase Auth. In the SQL Editor, promote that account exactly once using its Auth user UUID:
 
@@ -45,7 +46,7 @@ The migrations create the four roles, article workflow, feedback/revision histor
 
 ## Article workflow
 
-1. Sign in at `/sign-in`. Accounts are owner-invited; public self-registration is not enabled.
+1. Sign in at `/sign-in`. Accounts are owner-invited; `/register` explains why public self-registration is disabled. Password recovery is available at `/forgot-password`.
 2. Contributors and owners can draft at `/dashboard/articles`. The editor supports headings, formatting, lists, links, HTTPS images, tables, Markdown import/export, and syntax-highlighted code blocks.
 3. Save a draft, then submit it for review. Editors can start review, request revisions, reject, or approve. Only an owner can publish or unpublish.
 4. Published articles appear on the home page and at `/articles/:slug`. Reading time is calculated from article text when the server saves it.
@@ -53,6 +54,16 @@ The migrations create the four roles, article workflow, feedback/revision histor
 Article revisions keep the previous content and metadata, including category, difficulty, cover path, and tagged values. Workflow events record the actor/reviewer, timestamp, and status before and after each transition. Editorial feedback is shown with its reviewer and date. Article edits and transitions are restricted by both server authorization and database functions/RLS; changing or hiding a button does not grant permission.
 
 Account administration is available at `GET`/`POST /api/admin/users` and `PATCH`/`DELETE /api/admin/users/:userId`.
+
+## Website pages and workspaces
+
+- Public pages: `/articles`, `/categories`, `/tags`, `/authors`, `/authors/:authorId`, `/search`, `/about`, `/contact`, `/privacy`, and `/terms`. Article directories and search include only published content. Public author data is returned by a restricted database function rather than exposing profile records.
+- Contributor workspace: `/dashboard` and `/dashboard/{articles,drafts,submitted,feedback,published,profile}`; article creation/editing remains at `/dashboard/articles/new` and `/dashboard/articles/:articleId`.
+- Editor workspace: `/editor` and `/editor/{pending-reviews,under-review,revision-requests,review-history,contributor-articles}`.
+- Owner workspace: `/admin` and `/admin/{analytics,users,roles,articles,reviews,categories,tags,featured,ai-settings,website-settings,audit-logs}`. Sensitive pages and mutations check the owner role on the server and use the database's owner policies/functions.
+- Reader workspace: `/profile`, `/bookmarks`, `/likes`, `/comments`, `/ai-conversations`, and `/reading-history`. Bookmarks, likes, comments, and reading history are stored per account under RLS. AI conversations are private, bounded records; clearing a conversation deletes its saved copy.
+
+Password reset links exchange their Supabase recovery code at `/auth/callback` before allowing a new password. The site owner can configure public site metadata and a contact email in the admin settings. Until a public contact email is configured, the contact page explains that no address is available.
 
 ## Learning assistant setup
 
@@ -70,6 +81,6 @@ Published article readers can translate a full article or selected text into Eng
 
 Article translation rebuilds only text nodes in the existing Tiptap document, preserving headings, lists, tables, links, and other formatting. Code blocks and inline code remain unchanged; URLs, command flags, and parameter-like values are protected. Translation requests use the same local Ollama model and server-side rate limits as the assistant.
 
-## Current implementation boundary
+## Operational verification
 
-The article workspace, editorial workflow, cover upload validation, sign-in form, published-article reader, and local AI learning-assistant interface/API are implemented. Reader comments, bookmarks, likes, category/tag management screens, and password/invitation callback flows remain future work. The migrations have not been applied to a live Supabase project here; SQL execution, RLS behavior, storage policies, rate limiting, Auth integration, and Ollama connectivity must be validated in a development project before production use.
+The public pages, role-specific workspace pages, editorial workflow, account administration, category/tag management, reader engagement, password recovery, AI assistant, and translation flows are implemented. The migrations have not been applied to a live Supabase project here; SQL execution, RLS behavior, storage policies, rate limiting, Auth email callbacks, and Ollama connectivity must be validated in a development project before production use.

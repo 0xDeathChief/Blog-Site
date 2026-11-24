@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, Search, ShieldCheck, X } from "lucide-react";
+import { Menu, Search, ShieldCheck, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
 
@@ -16,18 +16,22 @@ export default function SiteHeader() {
           <span>CIPHER<span>BRIEF</span></span>
         </Link>
         <nav className={menuOpen ? "nav-links open" : "nav-links"} aria-label="Main navigation">
-          <Link href="/#latest" onClick={() => setMenuOpen(false)}>Latest</Link>
-          <Link href="/#topics" onClick={() => setMenuOpen(false)}>Topics</Link>
+          <Link href="/articles" onClick={() => setMenuOpen(false)}>Articles</Link>
+          <Link href="/categories" onClick={() => setMenuOpen(false)}>Categories</Link>
+          <Link href="/authors" onClick={() => setMenuOpen(false)}>Authors</Link>
           <Link href="/learning-assistant" onClick={() => setMenuOpen(false)}>Learning assistant</Link>
-          <Link href="/#contribute" onClick={() => setMenuOpen(false)}>Community</Link>
+          <Link href="/about" onClick={() => setMenuOpen(false)}>About</Link>
           <Link className="mobile-contributor-link" href="/sign-in" onClick={() => setMenuOpen(false)}>Contributor sign in</Link>
         </nav>
         <div className="nav-actions">
-          <Link className="icon-button" href="/#article-search" aria-label="Search articles">
+          <Link className="icon-button" href="/search" aria-label="Search articles">
             <Search size={19} />
           </Link>
+          <Link className="icon-button" href="/profile" aria-label="Your profile">
+            <UserRound size={18} />
+          </Link>
           <ThemeToggle />
-          <Link className="btn btn-outline signin-button contribute-link" href="/sign-in">Contributor access</Link>
+          <Link className="btn btn-outline signin-button contribute-link" href="/sign-in">Sign in</Link>
           <button
             className="menu-button"
             onClick={() => setMenuOpen((value) => !value)}

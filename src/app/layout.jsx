@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -11,10 +12,23 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
+const defaultMetadata = {
   title: "CipherBrief — Cybersecurity Intelligence",
   description: "Clear security research, practical guides, and community insights.",
 };
+
+export async function generateMetadata() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
+    return defaultMetadata;
+  }
+  const supabase = await createSupabaseServerClient();
+  const { data: settings, error } = await supabase.rpc("get_public_site_metadata");
+  if (error) throw new Error("Unable to load public site metadata.", { cause: error });
+  return {
+    title: settings?.site_title || defaultMetadata.title,
+    description: settings?.site_description || defaultMetadata.description,
+  };
+}
 
 export default function RootLayout({ children }) {
   return (

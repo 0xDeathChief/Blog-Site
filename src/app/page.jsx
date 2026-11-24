@@ -6,12 +6,16 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 import ArticleExplorer from "@/components/ArticleExplorer";
 import SiteHeader from "@/components/SiteHeader";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function Home() {
-  const articles = await getPublishedArticles();
+  const [articles, featuredArticle] = await Promise.all([
+    getPublishedArticles(),
+    getFeaturedArticle(),
+  ]);
 
   return (
     <main>
@@ -34,7 +38,7 @@ export default async function Home() {
 
           <article className="featured-card">
             <div className="featured-meta">
-              <span>THE CIPHERBRIEF APPROACH</span>
+              <span>{featuredArticle ? "FEATURED ARTICLE" : "THE CIPHERBRIEF APPROACH"}</span>
               <span className="severity"><i /> Community-led</span>
             </div>
             <div className="featured-visual">
@@ -49,12 +53,14 @@ export default async function Home() {
               </div>
             </div>
             <div className="featured-content">
-              <div className="article-category">Learn · Research · Share</div>
-              <h2>Security knowledge, shared responsibly.</h2>
-              <p>Practical cybersecurity writing, reviewed by editors and published with care.</p>
+              <div className="article-category">{featuredArticle?.category ?? "Learn · Research · Share"}</div>
+              <h2>{featuredArticle
+                ? <Link href={`/articles/${featuredArticle.slug}`}>{featuredArticle.title}</Link>
+                : "Security knowledge, shared responsibly."}</h2>
+              <p>{featuredArticle?.summary ?? "Practical cybersecurity writing, reviewed by editors and published with care."}</p>
               <div className="article-foot">
                 <div className="author-avatar"><ShieldCheck size={16} /></div>
-                <span><strong>CipherBrief</strong><small>Community publication</small></span>
+                <span><strong>{featuredArticle?.author ?? "CipherBrief"}</strong><small>{featuredArticle ? `${featuredArticle.readingTime} min read` : "Community publication"}</small></span>
                 <span className="read-time"><Users size={14} /> Editorial review</span>
               </div>
             </div>
@@ -104,7 +110,7 @@ export default async function Home() {
             <span className="section-kicker">LEARNING, IN YOUR LANGUAGE</span>
             <h2>Make complex security ideas easier to understand.</h2>
             <p>Explore concepts with a configurable local model, choose a teaching depth, and ask questions in English or Bangla. On article pages, select a passage for a focused explanation.</p>
-            <a className="primary-button assistant-cta" href="/learning-assistant">Open the learning assistant <ArrowRight size={16} /></a>
+            <Link className="primary-button assistant-cta" href="/learning-assistant">Open the learning assistant <ArrowRight size={16} /></Link>
           </div>
           <div className="learning-features">
             <article className="learning-feature">
@@ -130,6 +136,16 @@ export default async function Home() {
             <span>CIPHER<span>BRIEF</span></span>
           </a>
           <p>Clear security knowledge. Shared responsibly.</p>
+          <nav className="public-footer-links" aria-label="Footer">
+            <Link href="/articles">Articles</Link>
+            <Link href="/categories">Categories</Link>
+            <Link href="/tags">Tags</Link>
+            <Link href="/authors">Authors</Link>
+            <Link href="/about">About</Link>
+            <Link href="/contact">Contact</Link>
+            <Link href="/privacy">Privacy</Link>
+            <Link href="/terms">Terms</Link>
+          </nav>
           <span className="footer-note">Community platform · Building in public</span>
         </div>
       </footer>
@@ -140,8 +156,8 @@ export default async function Home() {
 
 async function getPublishedArticles() {
   const hasSupabaseConfiguration =
-    process.env.NEXT_PUBLIC_SUPABASE_URL !== undefined
-    || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY !== undefined;
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL
+      && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
   if (!hasSupabaseConfiguration) return [];
 
   const supabase = await createSupabaseServerClient();
@@ -174,4 +190,33 @@ async function getPublishedArticles() {
       ? supabase.storage.from("article-covers").getPublicUrl(article.cover_image_path).data.publicUrl
       : null,
   }));
+}
+
+async function getFeaturedArticle() {
+  const hasSupabaseConfiguration =
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL
+      && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+  if (!hasSupabaseConfiguration) return null;
+
+  const supabase = await createSupabaseServerClient();
+  const { data: article, error } = await supabase
+    .from("articles")
+    .select("id, author_id, title, slug, summary, reading_time_minutes, categories(name)")
+    .eq("status", "published")
+    .eq("is_featured", true)
+    .order("published_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error("Unable to load the featured article.", { cause: error });
+  if (!article) return null;
+  const { data: authors, error: authorError } = await supabase.rpc("get_published_article_authors", {
+    article_ids: [article.id],
+  });
+  if (authorError) throw new Error("Unable to load the featured article author.", { cause: authorError });
+  return {
+    ...article,
+    category: article.categories?.name ?? "Cybersecurity",
+    author: authors?.[0]?.author_name ?? "Former member",
+    readingTime: article.reading_time_minutes,
+  };
 }

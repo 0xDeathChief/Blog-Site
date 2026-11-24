@@ -109,7 +109,9 @@ export async function POST(request) {
         {
           error: error.code === "timeout"
             ? "The translation took too long. Try a shorter passage or try again."
-            : "The local translation model is unavailable. Check that Ollama is running and the configured model is installed.",
+            : error.code === "disabled"
+              ? "The site owner has disabled AI translation services."
+              : "The local translation model is unavailable. Check that Ollama is running and the configured model is installed.",
         },
         { status: error.code === "timeout" ? 504 : 503 },
       );

@@ -50,6 +50,7 @@ const translationStyles = [
 
 export default function AssistantChat({ articleSlug, selection = "" }) {
   const [messages, setMessages] = useState([]);
+  const [conversationId, setConversationId] = useState("");
   const [question, setQuestion] = useState("");
   const [task, setTask] = useState("chat");
   const [mode, setMode] = useState("beginner");
@@ -120,16 +121,36 @@ export default function AssistantChat({ articleSlug, selection = "" }) {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "The assistant could not answer right now.");
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: result.answer,
-          task: selectedTask,
-          createdAt: result.createdAt,
-        },
-      ]);
+      const assistantMessage = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: result.answer,
+        task: selectedTask,
+        createdAt: result.createdAt,
+      };
+      const completedMessages = [...visibleMessages, assistantMessage];
+      setMessages(completedMessages);
+      try {
+        const historyResponse = await fetch("/api/reader/conversations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: conversationId || undefined,
+            title: (completedMessages.find((message) => message.role === "user")?.content ?? "Learning conversation").slice(0, 120),
+            messages: completedMessages,
+          }),
+        });
+        const historyResult = await historyResponse.json();
+        if (historyResponse.status === 401) {
+          setNotice("Sign in to save this conversation to your history.");
+        } else if (!historyResponse.ok) {
+          setNotice(historyResult.error || "Your answer is ready, but conversation history could not be saved.");
+        } else {
+          setConversationId(historyResult.id);
+        }
+      } catch {
+        setNotice("Your answer is ready, but conversation history could not be saved.");
+      }
       return true;
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "The assistant could not answer right now.");
@@ -264,9 +285,23 @@ export default function AssistantChat({ articleSlug, selection = "" }) {
     }
   }
 
-  function clearConversation() {
-    setMessages([]);
+  async function clearConversation() {
     setError("");
+    setNotice("");
+    if (conversationId) {
+      try {
+        const response = await fetch(`/api/reader/conversations/${conversationId}`, { method: "DELETE" });
+        if (!response.ok && response.status !== 404) {
+          const result = await response.json();
+          throw new Error(result.error || "Unable to clear the saved conversation.");
+        }
+      } catch (requestError) {
+        setError(requestError instanceof Error ? requestError.message : "Unable to clear the saved conversation.");
+        return;
+      }
+    }
+    setConversationId("");
+    setMessages([]);
     setTranslationError("");
     setResponseTranslations({});
     setSelectedTranslation(null);

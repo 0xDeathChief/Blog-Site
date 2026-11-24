@@ -24,12 +24,24 @@ export default function SignInForm() {
         return;
       }
 
-      const requestedPath = new URLSearchParams(window.location.search).get("next") || "/dashboard/articles";
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) throw userError ?? new Error("Unable to load your account.");
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userData.user.id)
+        .maybeSingle();
+      if (profileError || !profile) throw profileError ?? new Error("Unable to load your access profile.");
+      const defaultPath = profile.role === "owner" ? "/admin"
+        : profile.role === "editor" ? "/editor"
+          : profile.role === "contributor" ? "/dashboard"
+            : "/profile";
+      const requestedPath = new URLSearchParams(window.location.search).get("next") || defaultPath;
       const parsedNext = new URL(requestedPath, window.location.origin);
       const nextPath = requestedPath.startsWith("/")
         && parsedNext.origin === window.location.origin
         ? `${parsedNext.pathname}${parsedNext.search}${parsedNext.hash}`
-        : "/dashboard/articles";
+        : defaultPath;
       window.location.assign(nextPath);
     } catch {
       setError("Sign in is unavailable right now. Please try again.");

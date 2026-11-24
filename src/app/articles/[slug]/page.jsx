@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import SiteHeader from "@/components/SiteHeader";
 import ArticleLearningExperience from "@/components/articles/ArticleLearningExperience";
+import { getCurrentPrincipal } from "@/lib/auth/authorization";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -26,12 +27,15 @@ export default async function PublishedArticlePage({ params }) {
     notFound();
   }
 
-  const { data: authors, error: authorError } = await supabase.rpc("get_published_article_authors", {
-    article_ids: [article.id],
-  });
-  if (authorError) throw new Error("Unable to load the article author.", { cause: authorError });
+  const [authorsResult, commentsResult, principal] = await Promise.all([
+    supabase.rpc("get_published_article_authors", { article_ids: [article.id] }),
+    supabase.from("article_comments").select("id, body, created_at").eq("article_id", article.id).order("created_at", { ascending: true }).limit(100),
+    getCurrentPrincipal(),
+  ]);
+  if (authorsResult.error) throw new Error("Unable to load the article author.", { cause: authorsResult.error });
+  if (commentsResult.error) throw new Error("Unable to load article comments.", { cause: commentsResult.error });
 
-  const authorName = authors?.[0]?.author_name ?? "Former member";
+  const authorName = authorsResult.data?.[0]?.author_name ?? "Former member";
   const coverUrl = article.cover_image_path
     ? supabase.storage.from("article-covers").getPublicUrl(article.cover_image_path).data.publicUrl
     : null;
@@ -49,14 +53,20 @@ export default async function PublishedArticlePage({ params }) {
           )}
           <ArticleLearningExperience
             articleSlug={article.slug}
+            articleId={article.id}
+            articlePath={`/articles/${article.slug}`}
+            isReader={principal?.role === "reader"}
+            comments={commentsResult.data ?? []}
             category={article.categories?.name ?? "Cybersecurity"}
+            categorySlug={article.categories?.slug}
             title={article.title}
             summary={article.summary}
             authorName={authorName}
+            authorId={article.author_id}
             publishedDate={formatDate(article.published_at)}
             readingTime={article.reading_time_minutes}
             difficulty={article.difficulty}
-            tags={article.article_tags?.map(({ tags }) => tags?.name).filter(Boolean) ?? []}
+            tags={article.article_tags?.map(({ tags }) => tags).filter(Boolean) ?? []}
             content={article.content}
           />
           <footer className="published-article-footer">

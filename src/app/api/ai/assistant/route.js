@@ -151,7 +151,9 @@ export async function POST(request) {
         {
           error: error.code === "timeout"
             ? "The local model took too long to respond. Try again or use a shorter question."
-            : "The local AI assistant is unavailable. Check that Ollama is running and the configured model is installed.",
+            : error.code === "disabled"
+              ? "The site owner has disabled AI learning services."
+              : "The local AI assistant is unavailable. Check that Ollama is running and the configured model is installed.",
         },
         { status: error.code === "timeout" ? 504 : 503 },
       );
