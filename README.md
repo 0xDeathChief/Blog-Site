@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CipherBrief
 
-## Getting Started
+A cybersecurity publication and learning-community project, built with the Next.js App Router.
 
-First, run the development server:
+## Stack
 
-```bash
+- JavaScript and JSX; server components by default, client components for interactive navigation and search.
+- Tailwind CSS 4, DaisyUI, and Lucide React.
+- Supabase PostgreSQL, Authentication, and Storage through `@supabase/ssr`.
+- Zod for validating configuration and future user input.
+- Ollama through a server-only, model-configurable helper.
+- React Markdown and Tiptap are installed for the upcoming article-reading and editing features.
+
+## Run locally
+
+```powershell
+npm install
+Copy-Item .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. The public homepage works without external credentials. Supabase or Ollama calls require the corresponding values in `.env.local`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Supabase setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Create a Supabase project.
+2. Copy the project URL and publishable key into `.env.local`.
+3. Keep privileged keys out of browser code. Server-side role checks and database Row Level Security policies must both be in place before protected operations are added.
 
-## Learn More
+## Local AI setup
 
-To learn more about Next.js, take a look at the following resources:
+1. Install Ollama and pull a model supported by your machine.
+2. Set `OLLAMA_BASE_URL` and `OLLAMA_MODEL` in `.env.local`.
+3. The Ollama helper is server-only. Add rate limiting and authorization in a Route Handler before exposing it to users.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Current implementation boundary
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The homepage and local article search are implemented. The Supabase clients and Ollama provider are foundations, not a finished sign-in, submission, review, upload, or chat feature. Those features need database migrations, RLS policies, server-side authorization, rate limits, and tests before they should be exposed in the UI.

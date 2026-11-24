@@ -1,89 +1,52 @@
-"use client";
-
-import { useState } from "react";
 import {
   ArrowRight,
   Bot,
   Clock3,
   FileCheck2,
   Languages,
-  Menu,
-  Search,
   ShieldCheck,
   Users,
-  X,
 } from "lucide-react";
-
-const articles = [
-  {
-    category: "Threat Intelligence",
-    title: "Inside the 2025 ransomware economy",
-    excerpt:
-      "How affiliate networks, data brokers, and cloud abuse are reshaping modern extortion.",
-    author: "Maya Chen",
-    date: "Nov 18",
-    read: "8 min",
-    accent: "violet",
-  },
-  {
-    category: "Cloud Security",
-    title: "The identity-first approach to cloud defense",
-    excerpt:
-      "Five practical controls for reducing attack paths in complex multi-cloud environments.",
-    author: "Omar Hassan",
-    date: "Nov 16",
-    read: "6 min",
-    accent: "cyan",
-  },
-  {
-    category: "Defense",
-    title: "Detection engineering without the noise",
-    excerpt:
-      "A field guide to tuning detections, measuring coverage, and building high-confidence alerts.",
-    author: "Lena Brooks",
-    date: "Nov 14",
-    read: "10 min",
-    accent: "orange",
-  },
-];
+import ArticleExplorer from "@/components/ArticleExplorer";
+import SiteHeader from "@/components/SiteHeader";
 
 export default function Home() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const filteredArticles = articles.filter((article) =>
-    `${article.title} ${article.excerpt} ${article.category} ${article.author}`
-      .toLowerCase()
-      .includes(searchQuery.trim().toLowerCase()),
-  );
+  const articles = [
+    {
+      category: "Threat Intelligence",
+      title: "Inside the 2025 ransomware economy",
+      excerpt:
+        "How affiliate networks, data brokers, and cloud abuse are reshaping modern extortion.",
+      author: "Maya Chen",
+      date: "Nov 18",
+      read: "8 min",
+      accent: "violet",
+    },
+    {
+      category: "Cloud Security",
+      title: "The identity-first approach to cloud defense",
+      excerpt:
+        "Five practical controls for reducing attack paths in complex multi-cloud environments.",
+      author: "Omar Hassan",
+      date: "Nov 16",
+      read: "6 min",
+      accent: "cyan",
+    },
+    {
+      category: "Defense",
+      title: "Detection engineering without the noise",
+      excerpt:
+        "A field guide to tuning detections, measuring coverage, and building high-confidence alerts.",
+      author: "Lena Brooks",
+      date: "Nov 14",
+      read: "10 min",
+      accent: "orange",
+    },
+  ];
 
   return (
     <main>
-      <header className="site-header">
-        <div className="shell nav-wrap">
-          <a className="brand" href="#" aria-label="CipherBrief home">
-            <span className="brand-mark"><ShieldCheck size={17} /></span>
-            <span>CIPHER<span>BRIEF</span></span>
-          </a>
-          <nav className={menuOpen ? "nav-links open" : "nav-links"} aria-label="Main navigation">
-            <a href="#latest">Latest</a>
-            <a href="#topics">Topics</a>
-            <a href="#learn">Learning</a>
-            <a href="#contribute">Community</a>
-          </nav>
-          <div className="nav-actions">
-            <button className="icon-button" onClick={() => setSearchOpen(true)} aria-label="Search"><Search size={19} /></button>
-            <a className="signin-button contribute-link" href="#contribute">Contribute</a>
-            <button
-              className="menu-button"
-              onClick={() => setMenuOpen((value) => !value)}
-              aria-label="Toggle menu"
-            >
-              {menuOpen ? <X size={21} /> : <Menu size={21} />}
-            </button>
-          </div>
-        </div>
-      </header>
+      <SiteHeader />
 
       <section className="hero">
         <div className="shell hero-grid">
@@ -95,7 +58,7 @@ export default function Home() {
               research, practical learning, and a community that shares what works.
             </p>
             <div className="hero-actions">
-              <a className="primary-button" href="#latest">Explore the latest <ArrowRight size={17} /></a>
+              <a className="btn btn-primary primary-button" href="#latest">Explore the latest <ArrowRight size={17} /></a>
               <a className="text-button" href="#contribute"><Users size={16} /> Write with the community</a>
             </div>
           </div>
@@ -130,40 +93,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="latest-section" id="latest">
-        <div className="shell">
-          <div className="section-heading">
-            <div>
-              <span className="section-kicker">THE BRIEF</span>
-              <h2 id="topics">Latest intelligence</h2>
-            </div>
-            <a href="#topics">View all stories <ArrowRight size={16} /></a>
-          </div>
-
-          <div className="article-grid">
-            {filteredArticles.map((article) => (
-              <article className="article-card" key={article.title}>
-                <div className={`article-art ${article.accent}`}>
-                  <div className="art-grid" />
-                  <div className="art-shield"><ShieldCheck size={44} /></div>
-                  <span>{article.category}</span>
-                </div>
-                <div className="article-body">
-                  <h3>{article.title}</h3>
-                  <p>{article.excerpt}</p>
-                  <div className="card-foot">
-                    <span>By {article.author}</span>
-                    <span>{article.date} · {article.read}</span>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-          {filteredArticles.length === 0 && (
-            <p className="empty-search">No articles match “{searchQuery}”. Try another topic.</p>
-          )}
-        </div>
-      </section>
+      <ArticleExplorer articles={articles} />
 
       <section className="community-section" id="contribute">
         <div className="shell">
@@ -235,50 +165,6 @@ export default function Home() {
         </div>
       </footer>
 
-      {searchOpen && (
-        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Search articles">
-          <div className="search-modal">
-            <div className="modal-search-row">
-              <Search size={19} />
-              <input
-                autoFocus
-                placeholder="Search articles and topics…"
-                aria-label="Search query"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    setSearchOpen(false);
-                    document.getElementById("latest")?.scrollIntoView({ behavior: "smooth" });
-                  }
-                }}
-              />
-              <button
-                onClick={() => {
-                  setSearchOpen(false);
-                  setSearchQuery("");
-                }}
-                aria-label="Close search"
-              ><X size={18} /></button>
-            </div>
-            <div className="search-results">
-              {searchQuery.trim() ? (
-                filteredArticles.length > 0 ? filteredArticles.map((article) => (
-                  <button
-                    key={article.title}
-                    onClick={() => {
-                      setSearchOpen(false);
-                      document.getElementById("latest")?.scrollIntoView({ behavior: "smooth" });
-                    }}
-                  >
-                    <span>{article.category}</span><strong>{article.title}</strong>
-                  </button>
-                )) : <p>No matching articles yet.</p>
-              ) : <p>Search article titles, topics, authors, and summaries.</p>}
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
