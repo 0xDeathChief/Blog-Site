@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Menu, Search, ShieldCheck, X } from "lucide-react";
+import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
 
 export default function SiteHeader() {
@@ -10,22 +11,23 @@ export default function SiteHeader() {
   return (
     <header className="site-header">
       <div className="shell nav-wrap">
-        <a className="brand" href="#" aria-label="CipherBrief home">
+        <Link className="brand" href="/" aria-label="CipherBrief home">
           <span className="brand-mark"><ShieldCheck size={17} /></span>
           <span>CIPHER<span>BRIEF</span></span>
-        </a>
+        </Link>
         <nav className={menuOpen ? "nav-links open" : "nav-links"} aria-label="Main navigation">
-          <a href="#latest" onClick={() => setMenuOpen(false)}>Latest</a>
-          <a href="#topics" onClick={() => setMenuOpen(false)}>Topics</a>
-          <a href="#learn" onClick={() => setMenuOpen(false)}>Learning</a>
-          <a href="#contribute" onClick={() => setMenuOpen(false)}>Community</a>
+          <Link href="/#latest" onClick={() => setMenuOpen(false)}>Latest</Link>
+          <Link href="/#topics" onClick={() => setMenuOpen(false)}>Topics</Link>
+          <Link href="/#learn" onClick={() => setMenuOpen(false)}>Learning</Link>
+          <Link href="/#contribute" onClick={() => setMenuOpen(false)}>Community</Link>
+          <Link className="mobile-contributor-link" href="/sign-in" onClick={() => setMenuOpen(false)}>Contributor sign in</Link>
         </nav>
         <div className="nav-actions">
-          <a className="icon-button" href="#article-search" aria-label="Search articles">
+          <Link className="icon-button" href="/#article-search" aria-label="Search articles">
             <Search size={19} />
-          </a>
+          </Link>
           <ThemeToggle />
-          <a className="btn btn-outline signin-button contribute-link" href="#contribute">Contribute</a>
+          <Link className="btn btn-outline signin-button contribute-link" href="/sign-in">Contributor access</Link>
           <button
             className="menu-button"
             onClick={() => setMenuOpen((value) => !value)}

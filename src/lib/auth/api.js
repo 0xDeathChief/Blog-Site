@@ -5,6 +5,30 @@ import {
   requireRole,
 } from "./authorization";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export async function requireRoleApi(request, allowedRoles, { mutating = false } = {}) {
+  if (mutating && !isSameOriginRequest(request)) {
+    return {
+      response: NextResponse.json({ error: "Invalid request origin." }, { status: 403 }),
+    };
+  }
+
+  let principal;
+  try {
+    principal = await requireRole(...allowedRoles);
+  } catch (error) {
+    if (error instanceof AuthenticationRequiredError) {
+      return { response: NextResponse.json({ error: error.message }, { status: 401 }) };
+    }
+    if (error instanceof AuthorizationError) {
+      return { response: NextResponse.json({ error: error.message }, { status: 403 }) };
+    }
+    throw error;
+  }
+
+  return { principal, supabase: await createSupabaseServerClient() };
+}
 
 export async function requireOwnerApi(request, { mutating = false } = {}) {
   if (mutating && !isSameOriginRequest(request)) {
@@ -51,9 +75,22 @@ export async function requireOwnerApi(request, { mutating = false } = {}) {
   return { owner, adminClient };
 }
 
-export async function readJsonBody(request) {
+export async function readJsonBody(request, { maxBytes = 1_000_000 } = {}) {
+  const declaredLength = Number(request.headers.get("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    return {
+      response: NextResponse.json({ error: "Request body is too large." }, { status: 413 }),
+    };
+  }
+
   try {
-    return { body: await request.json() };
+    const text = await request.text();
+    if (Buffer.byteLength(text, "utf8") > maxBytes) {
+      return {
+        response: NextResponse.json({ error: "Request body is too large." }, { status: 413 }),
+      };
+    }
+    return { body: JSON.parse(text) };
   } catch {
     return { response: NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400 }) };
   }

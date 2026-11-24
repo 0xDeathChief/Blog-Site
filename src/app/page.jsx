@@ -1,7 +1,6 @@
 import {
   ArrowRight,
   Bot,
-  Clock3,
   FileCheck2,
   Languages,
   ShieldCheck,
@@ -9,40 +8,10 @@ import {
 } from "lucide-react";
 import ArticleExplorer from "@/components/ArticleExplorer";
 import SiteHeader from "@/components/SiteHeader";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export default function Home() {
-  const articles = [
-    {
-      category: "Threat Intelligence",
-      title: "Inside the 2025 ransomware economy",
-      excerpt:
-        "How affiliate networks, data brokers, and cloud abuse are reshaping modern extortion.",
-      author: "Maya Chen",
-      date: "Nov 18",
-      read: "8 min",
-      accent: "violet",
-    },
-    {
-      category: "Cloud Security",
-      title: "The identity-first approach to cloud defense",
-      excerpt:
-        "Five practical controls for reducing attack paths in complex multi-cloud environments.",
-      author: "Omar Hassan",
-      date: "Nov 16",
-      read: "6 min",
-      accent: "cyan",
-    },
-    {
-      category: "Defense",
-      title: "Detection engineering without the noise",
-      excerpt:
-        "A field guide to tuning detections, measuring coverage, and building high-confidence alerts.",
-      author: "Lena Brooks",
-      date: "Nov 14",
-      read: "10 min",
-      accent: "orange",
-    },
-  ];
+export default async function Home() {
+  const articles = await getPublishedArticles();
 
   return (
     <main>
@@ -65,8 +34,8 @@ export default function Home() {
 
           <article className="featured-card">
             <div className="featured-meta">
-              <span>FEATURED ANALYSIS</span>
-              <span className="severity"><i /> Critical</span>
+              <span>THE CIPHERBRIEF APPROACH</span>
+              <span className="severity"><i /> Community-led</span>
             </div>
             <div className="featured-visual">
               <div className="radar">
@@ -80,13 +49,13 @@ export default function Home() {
               </div>
             </div>
             <div className="featured-content">
-              <div className="article-category">Vulnerability Research</div>
-              <h2>How to break the zero-day hype cycle</h2>
-              <p>A practical framework for separating real exposure from manufactured urgency.</p>
+              <div className="article-category">Learn · Research · Share</div>
+              <h2>Security knowledge, shared responsibly.</h2>
+              <p>Practical cybersecurity writing, reviewed by editors and published with care.</p>
               <div className="article-foot">
-                <div className="author-avatar">RK</div>
-                <span><strong>Rowan Keller</strong><small>Security Researcher</small></span>
-                <span className="read-time"><Clock3 size={14} /> 12 min read</span>
+                <div className="author-avatar"><ShieldCheck size={16} /></div>
+                <span><strong>CipherBrief</strong><small>Community publication</small></span>
+                <span className="read-time"><Users size={14} /> Editorial review</span>
               </div>
             </div>
           </article>
@@ -167,4 +136,42 @@ export default function Home() {
 
     </main>
   );
+}
+
+async function getPublishedArticles() {
+  const hasSupabaseConfiguration =
+    process.env.NEXT_PUBLIC_SUPABASE_URL !== undefined
+    || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY !== undefined;
+  if (!hasSupabaseConfiguration) return [];
+
+  const supabase = await createSupabaseServerClient();
+  const { data: articles, error } = await supabase
+    .from("articles")
+    .select("id, author_id, title, slug, summary, published_at, reading_time_minutes, cover_image_path, categories(name)")
+    .eq("status", "published")
+    .order("published_at", { ascending: false })
+    .limit(6);
+  if (error) throw new Error("Unable to load published articles.", { cause: error });
+  if (!articles.length) return [];
+
+  const { data: authors, error: authorError } = await supabase.rpc("get_published_article_authors", {
+    article_ids: articles.map((article) => article.id),
+  });
+  if (authorError) throw new Error("Unable to load published article authors.", { cause: authorError });
+  const authorByArticleId = new Map((authors ?? []).map((author) => [author.article_id, author.author_name]));
+  const accents = ["violet", "cyan", "orange"];
+
+  return articles.map((article, index) => ({
+    slug: article.slug,
+    category: article.categories?.name ?? "Cybersecurity",
+    title: article.title,
+    excerpt: article.summary,
+    author: authorByArticleId.get(article.id) ?? "Former member",
+    date: new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(article.published_at)),
+    read: `${article.reading_time_minutes} min`,
+    accent: accents[index % accents.length],
+    coverUrl: article.cover_image_path
+      ? supabase.storage.from("article-covers").getPublicUrl(article.cover_image_path).data.publicUrl
+      : null,
+  }));
 }

@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { ArrowRight, Search, ShieldCheck } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function ArticleExplorer({ articles }) {
   const [query, setQuery] = useState("");
@@ -41,10 +43,16 @@ export default function ArticleExplorer({ articles }) {
         {filteredArticles.length > 0 ? (
           <div className="article-grid">
             {filteredArticles.map((article) => (
-              <article className="article-card" key={article.title}>
+              <Link className="article-card" href={`/articles/${article.slug}`} key={article.slug}>
                 <div className={`article-art ${article.accent}`}>
-                  <div className="art-grid" />
-                  <div className="art-shield"><ShieldCheck size={44} /></div>
+                  {article.coverUrl ? (
+                    <Image className="article-cover" src={article.coverUrl} alt="" width={720} height={360} unoptimized />
+                  ) : (
+                    <>
+                      <div className="art-grid" />
+                      <div className="art-shield"><ShieldCheck size={44} /></div>
+                    </>
+                  )}
                   <span>{article.category}</span>
                 </div>
                 <div className="article-body">
@@ -55,17 +63,26 @@ export default function ArticleExplorer({ articles }) {
                     <span>{article.date} · {article.read}</span>
                   </div>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         ) : (
           <div className="empty-state" role="status">
             <Search size={20} aria-hidden="true" />
-            <strong>No articles match “{query}”.</strong>
-            <p>Try a different title, topic, or author.</p>
-            <button className="btn btn-ghost" type="button" onClick={() => setQuery("")}>
-              Clear search <ArrowRight size={15} />
-            </button>
+            {articles.length ? (
+              <>
+                <strong>No articles match “{query}”.</strong>
+                <p>Try a different title, topic, or author.</p>
+                <button className="btn btn-ghost" type="button" onClick={() => setQuery("")}>
+                  Clear search <ArrowRight size={15} />
+                </button>
+              </>
+            ) : (
+              <>
+                <strong>No published articles yet.</strong>
+                <p>Approved community research will appear here after publication.</p>
+              </>
+            )}
           </div>
         )}
       </div>
