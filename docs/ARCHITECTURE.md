@@ -32,6 +32,25 @@ Keep UI in `src/components` and business logic in `src/lib` or API route handler
 
 The existing route paths are kept directly under `src/app` to preserve URLs. Next.js route groups such as `(public)` are optional; use them only when a shared layout or access boundary justifies moving routes.
 
+## UI design tokens
+
+The CSS variables in [`src/app/globals.css`](../src/app/globals.css) are the source of truth. Use these tokens in new UI instead of introducing one-off colors.
+
+| Token | Light | Dark |
+|---|---|---|
+| `--page-bg` | `#f4f5f7` | `#171a20` |
+| `--surface` | `#ffffff` | `#20242c` |
+| `--surface-secondary` | `#e9ebef` | `#292e37` |
+| `--surface-tertiary` | `#f0f1f4` | `#252a32` |
+| `--ink` | `#20242c` | `#eef0f3` |
+| `--muted` | `#777f8c` | `#a4acb8` |
+| `--line` | `#dde1e7` | `#3a404a` |
+| `--green` | `#b8d8c0` | `#8db99a` |
+| `--accent` | `#b8f34a` | `#b8f34a` |
+| `--lavender` | `#dcd6f7` | `#b7addc` |
+| `--blue` | `#c9ddf5` | `#91b4d8` |
+| `--yellow` | `#f5e7b5` | `#d3bf7c` |
+
 ## Request and data flow
 
 1. A page or API handler receives the request.
