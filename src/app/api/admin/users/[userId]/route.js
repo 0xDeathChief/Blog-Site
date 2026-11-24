@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { requireOwnerApi, readJsonBody } from "@/lib/auth/api";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -62,6 +63,7 @@ export async function PATCH(request, context) {
       { status: updateError.code === "23514" ? 409 : 502 },
     );
   }
+  revalidateTag("published-content", "max");
 
   if (update.data.status) {
     const banDuration = update.data.status === "deactivated" ? "876000h" : "none";
@@ -134,6 +136,7 @@ export async function DELETE(request, context) {
       { status: 409 },
     );
   }
+  revalidateTag("published-content", "max");
 
   const { error: completedAuditError } = await supabase.rpc("log_owner_action", {
     action_name: "account_deleted",

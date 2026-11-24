@@ -12,10 +12,14 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import ArticleExplorer from "@/components/ArticleExplorer";
 import SiteHeader from "@/components/SiteHeader";
 import { getPublicAuthors, getPublicCategories } from "@/lib/articles/public";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabasePublicClient } from "@/lib/supabase/public";
+
+export const revalidate = 300;
+export const metadata = { alternates: { canonical: "/" } };
 
 export default async function Home() {
   const [articles, featuredArticle, popularArticles, categories, contributors] = await Promise.all([
@@ -61,7 +65,6 @@ export default async function Home() {
                   alt=""
                   fill
                   sizes="(max-width: 900px) 100vw, 55vw"
-                  unoptimized
                   priority
                 />
               ) : (
@@ -315,9 +318,9 @@ export default async function Home() {
   );
 }
 
-async function getLatestArticles() {
+const getLatestArticles = unstable_cache(async () => {
   if (!hasSupabaseConfiguration()) return [];
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabasePublicClient();
   const { data: articles, error } = await supabase
     .from("articles")
     .select("id, author_id, title, slug, summary:excerpt, published_at, reading_time_minutes:reading_time, cover_image_path:cover_image, categories(name)")
@@ -347,11 +350,14 @@ async function getLatestArticles() {
       ? supabase.storage.from("article-covers").getPublicUrl(article.cover_image_path).data.publicUrl
       : null,
   }));
-}
+}, ["homepage-latest-articles-v1"], {
+  revalidate: 300,
+  tags: ["published-content"],
+});
 
-async function getFeaturedArticle() {
+const getFeaturedArticle = unstable_cache(async () => {
   if (!hasSupabaseConfiguration()) return null;
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabasePublicClient();
   const { data: article, error } = await supabase
     .from("articles")
     .select("id, author_id, title, slug, summary:excerpt, reading_time_minutes:reading_time, cover_image_path:cover_image, categories(name)")
@@ -376,11 +382,14 @@ async function getFeaturedArticle() {
       ? supabase.storage.from("article-covers").getPublicUrl(article.cover_image_path).data.publicUrl
       : null,
   };
-}
+}, ["homepage-featured-article-v1"], {
+  revalidate: 300,
+  tags: ["published-content"],
+});
 
-async function getPopularArticles() {
+const getPopularArticles = unstable_cache(async () => {
   if (!hasSupabaseConfiguration()) return [];
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabasePublicClient();
   const { data: popular, error: popularError } = await supabase
     .from("article_like_counts")
     .select("article_id, like_count")
@@ -413,7 +422,10 @@ async function getPopularArticles() {
     category: article.categories?.name ?? "Cybersecurity",
     author: authorByArticleId.get(article.id) ?? "Former member",
   }));
-}
+}, ["homepage-popular-articles-v1"], {
+  revalidate: 300,
+  tags: ["published-content"],
+});
 
 function hasSupabaseConfiguration() {
   return Boolean(

@@ -1,6 +1,7 @@
 import "server-only";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { unstable_cache } from "next/cache";
+import { createSupabasePublicClient } from "@/lib/supabase/public";
 
 const hasSupabaseConfiguration = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -37,13 +38,9 @@ export function parseArticleDiscoveryFilters(params, defaults = {}) {
   };
 }
 
-export async function getPublishedArticlePage(filters) {
+const loadPublishedArticlePage = unstable_cache(async (filters) => {
   const requestedPage = filters.page ?? 1;
-  if (!hasSupabaseConfiguration) {
-    return { articles: [], total: 0, page: 1, pageSize: ARTICLE_PAGE_SIZE, totalPages: 1 };
-  }
-
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabasePublicClient();
   async function loadPage(page) {
     const { data, error } = await supabase.rpc("search_published_articles", {
       search_text: filters.query ?? "",
@@ -89,20 +86,54 @@ export async function getPublishedArticlePage(filters) {
       : null,
   }));
   return { articles, total, page, pageSize: ARTICLE_PAGE_SIZE, totalPages };
+}, ["published-article-page-v1"], {
+  revalidate: 300,
+  tags: ["published-content"],
+});
+
+export async function getPublishedArticlePage(filters) {
+  if (!hasSupabaseConfiguration) {
+    return { articles: [], total: 0, page: 1, pageSize: ARTICLE_PAGE_SIZE, totalPages: 1 };
+  }
+  return loadPublishedArticlePage(filters);
 }
 
-export async function getArticleDiscoveryOptions() {
-  const [categories, tags, authors] = await Promise.all([
-    getPublicCategories(),
-    getPublicTags(),
-    getPublicAuthors(),
-  ]);
-  return { categories, tags, authors };
+const loadPublishedArticleBySlug = unstable_cache(async (slug) => {
+  const supabase = createSupabasePublicClient();
+  const { data: article, error } = await supabase
+    .from("articles")
+    .select("id, author_id, title, slug, excerpt, content, difficulty, reading_time, published_at, updated_at, cover_image, categories(name, slug), article_tags(tags(id, name, slug))")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .maybeSingle();
+  if (error) throw new Error("Unable to load this published article.", { cause: error });
+  if (!article) return null;
+
+  const { data: authors, error: authorError } = await supabase.rpc(
+    "get_published_article_authors",
+    { article_ids: [article.id] },
+  );
+  if (authorError) throw new Error("Unable to load the article author.", { cause: authorError });
+
+  return {
+    article,
+    authorName: authors?.[0]?.author_name ?? "Former member",
+    coverUrl: article.cover_image
+      ? supabase.storage.from("article-covers").getPublicUrl(article.cover_image).data.publicUrl
+      : null,
+  };
+}, ["published-article-by-slug-v1"], {
+  revalidate: 300,
+  tags: ["published-content"],
+});
+
+export async function getPublishedArticleBySlug(slug) {
+  if (!hasSupabaseConfiguration) return null;
+  return loadPublishedArticleBySlug(slug);
 }
 
-export async function getPublicCategories() {
-  if (!hasSupabaseConfiguration) return [];
-  const supabase = await createSupabaseServerClient();
+const loadPublicCategories = unstable_cache(async () => {
+  const supabase = createSupabasePublicClient();
   const [categoriesResult, articlesResult] = await Promise.all([
     supabase.from("categories").select("id, name, slug").eq("is_active", true).order("name"),
     supabase.from("articles").select("category_id").eq("status", "published"),
@@ -122,11 +153,18 @@ export async function getPublicCategories() {
     ...category,
     articleCount: countByCategory.get(category.id) ?? 0,
   }));
+}, ["public-categories-v1"], {
+  revalidate: 600,
+  tags: ["published-content", "public-categories"],
+});
+
+export async function getPublicCategories() {
+  if (!hasSupabaseConfiguration) return [];
+  return loadPublicCategories();
 }
 
-export async function getPublicTags() {
-  if (!hasSupabaseConfiguration) return [];
-  const supabase = await createSupabaseServerClient();
+const loadPublicTags = unstable_cache(async () => {
+  const supabase = createSupabasePublicClient();
   const [tagsResult, articleTagsResult] = await Promise.all([
     supabase.from("tags").select("id, name, slug").order("name"),
     supabase.from("article_tags").select("tag_id, articles!inner(status)").eq("articles.status", "published"),
@@ -144,16 +182,71 @@ export async function getPublicTags() {
     ...tag,
     articleCount: countByTag.get(tag.id) ?? 0,
   })).filter((tag) => tag.articleCount > 0);
+}, ["public-tags-v1"], {
+  revalidate: 600,
+  tags: ["published-content", "public-tags"],
+});
+
+export async function getPublicTags() {
+  if (!hasSupabaseConfiguration) return [];
+  return loadPublicTags();
 }
 
-export async function getPublicAuthors(authorId = null) {
-  if (!hasSupabaseConfiguration) return [];
-  const supabase = await createSupabaseServerClient();
+const loadPublicAuthors = unstable_cache(async (authorId) => {
+  const supabase = createSupabasePublicClient();
   const { data, error } = await supabase.rpc("get_public_authors", {
     target_author_id: authorId,
   });
   if (error) throw new Error("Unable to load public authors.", { cause: error });
   return data ?? [];
+}, ["public-authors-v1"], {
+  revalidate: 600,
+  tags: ["published-content", "public-authors"],
+});
+
+export async function getPublicAuthors(authorId = null) {
+  if (!hasSupabaseConfiguration) return [];
+  return loadPublicAuthors(authorId);
+}
+
+const loadPublicArticleSitemapEntries = unstable_cache(async () => {
+  const supabase = createSupabasePublicClient();
+  const entries = [];
+  const batchSize = 1000;
+
+  for (let offset = 0; ; offset += batchSize) {
+    const { data, error } = await supabase
+      .from("articles")
+      .select("slug, published_at, updated_at")
+      .eq("status", "published")
+      .order("published_at", { ascending: false })
+      .range(offset, offset + batchSize - 1);
+    if (error) throw new Error("Unable to load published articles for the sitemap.", { cause: error });
+    entries.push(...(data ?? []));
+    if (!data || data.length < batchSize) break;
+    if (entries.length > 50000) {
+      throw new Error("The published article count exceeds the single-sitemap limit.");
+    }
+  }
+
+  return entries;
+}, ["public-article-sitemap-v1"], {
+  revalidate: 3600,
+  tags: ["published-content"],
+});
+
+export async function getPublicArticleSitemapEntries() {
+  if (!hasSupabaseConfiguration) return [];
+  return loadPublicArticleSitemapEntries();
+}
+
+export async function getArticleDiscoveryOptions() {
+  const [categories, tags, authors] = await Promise.all([
+    getPublicCategories(),
+    getPublicTags(),
+    getPublicAuthors(),
+  ]);
+  return { categories, tags, authors };
 }
 
 function readParam(params, name) {

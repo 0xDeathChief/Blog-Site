@@ -13,7 +13,14 @@ export default function ArticleCards({ articles, emptyMessage = "No published ar
         <Link className="article-card" href={`/articles/${article.slug}`} key={article.id}>
           <div className="article-art violet">
             {article.coverUrl
-              ? <Image className="article-cover" src={article.coverUrl} alt="" width={720} height={360} unoptimized />
+              ? <Image
+                className="article-cover"
+                src={article.coverUrl}
+                alt=""
+                width={720}
+                height={360}
+                sizes="(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw"
+              />
               : <><div className="art-grid" /><div className="art-shield"><ShieldCheck size={42} /></div></>}
             <span>{article.category ?? article.categories?.name ?? "Cybersecurity"}</span>
           </div>

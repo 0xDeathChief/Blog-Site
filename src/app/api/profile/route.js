@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { readJsonBody, requireRoleApi } from "@/lib/auth/api";
 
@@ -37,5 +38,6 @@ export async function PATCH(request) {
       error: status === 409 ? "That username is already in use." : status === 400 ? "The profile details are invalid." : "Unable to update your profile.",
     }, { status });
   }
+  revalidateTag("published-content", "max");
   return NextResponse.json({ status: "updated" });
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import {
   articleActionSchema,
   sanitizeArticleContent,
@@ -115,6 +116,7 @@ export async function PATCH(request, context) {
     );
   }
 
+  revalidateTag("published-content", "max");
   return NextResponse.json({ id: articleId });
 }
 
@@ -144,6 +146,7 @@ export async function POST(request, context) {
     return NextResponse.json({ error: "This article cannot make that workflow transition." }, { status });
   }
 
+  revalidateTag("published-content", "max");
   return NextResponse.json({ status: "updated" });
 }
 
@@ -163,5 +166,6 @@ export async function DELETE(request, context) {
     return NextResponse.json({ error: "Unable to delete this article." }, { status });
   }
 
+  revalidateTag("published-content", "max");
   return new NextResponse(null, { status: 204 });
 }

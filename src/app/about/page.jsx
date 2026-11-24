@@ -1,7 +1,7 @@
 import { BookOpenCheck, ShieldCheck, Users } from "lucide-react";
 import PublicPage from "@/components/public/PublicPage";
 
-export const metadata = { title: "About CipherBrief" };
+export const metadata = { title: "About CipherBrief", alternates: { canonical: "/about" } };
 
 export default function AboutPage() {
   return (

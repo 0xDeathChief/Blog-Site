@@ -32,7 +32,14 @@ export default function ArticleExplorer({ articles }) {
               <Link className="article-card" href={`/articles/${article.slug}`} key={article.slug}>
                 <div className={`article-art ${article.accent}`}>
                   {article.coverUrl ? (
-                    <Image className="article-cover" src={article.coverUrl} alt="" width={720} height={360} unoptimized />
+                    <Image
+                      className="article-cover"
+                      src={article.coverUrl}
+                      alt=""
+                      width={720}
+                      height={360}
+                      sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 33vw"
+                    />
                   ) : (
                     <>
                       <div className="art-grid" />

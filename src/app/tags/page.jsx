@@ -2,7 +2,7 @@ import DirectoryCards from "@/components/public/DirectoryCards";
 import PublicPage from "@/components/public/PublicPage";
 import { getPublicTags } from "@/lib/articles/public";
 
-export const metadata = { title: "Tags — CipherBrief" };
+export const metadata = { title: "Tags — CipherBrief", alternates: { canonical: "/tags" } };
 export const dynamic = "force-dynamic";
 
 export default async function TagsPage() {

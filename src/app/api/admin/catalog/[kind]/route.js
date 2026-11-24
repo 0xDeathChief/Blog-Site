@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { requireOwnerApi, readJsonBody } from "@/lib/auth/api";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -39,6 +40,7 @@ export async function POST(request, context) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.from(catalog.table).insert(parsed.data).select("*").single();
   if (error) return NextResponse.json({ error: error.code === "23505" ? "That name or slug is already in use." : "Unable to create this item." }, { status: error.code === "23505" ? 409 : 502 });
+  revalidateCatalog(kind);
   return NextResponse.json({ item: data }, { status: 201 });
 }
 
@@ -64,6 +66,7 @@ export async function PATCH(request, context) {
   const { data, error } = await supabase.from(catalog.table).update(update).eq("id", id).select("*").maybeSingle();
   if (error) return NextResponse.json({ error: error.code === "23505" ? "That name or slug is already in use." : "Unable to update this item." }, { status: error.code === "23505" ? 409 : 502 });
   if (!data) return NextResponse.json({ error: "Item not found." }, { status: 404 });
+  revalidateCatalog(kind);
   return NextResponse.json({ item: data });
 }
 
@@ -81,5 +84,11 @@ export async function DELETE(request, context) {
   const { data, error } = await supabase.from(catalog.table).delete().eq("id", parsed.data.id).select("id").maybeSingle();
   if (error) return NextResponse.json({ error: "Unable to delete this item." }, { status: 502 });
   if (!data) return NextResponse.json({ error: "Item not found." }, { status: 404 });
+  revalidateCatalog(kind);
   return new NextResponse(null, { status: 204 });
+}
+
+function revalidateCatalog(kind) {
+  revalidateTag(kind === "categories" ? "public-categories" : "public-tags", "max");
+  revalidateTag("published-content", "max");
 }

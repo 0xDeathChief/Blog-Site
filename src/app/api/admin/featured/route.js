@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { requireOwnerApi, readJsonBody } from "@/lib/auth/api";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -16,5 +17,6 @@ export async function POST(request) {
     featured: parsed.data.featured,
   });
   if (error) return NextResponse.json({ error: "Unable to update featured content." }, { status: error.code === "P0002" ? 404 : 502 });
+  revalidateTag("published-content", "max");
   return NextResponse.json({ status: "updated" });
 }

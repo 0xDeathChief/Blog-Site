@@ -6,7 +6,11 @@ import {
   parseArticleDiscoveryFilters,
 } from "@/lib/articles/public";
 
-export const metadata = { title: "Search — CipherBrief" };
+export const metadata = {
+  title: "Search — CipherBrief",
+  robots: { index: false, follow: true },
+  alternates: { canonical: "/search" },
+};
 export const dynamic = "force-dynamic";
 
 export default async function SearchPage({ searchParams }) {

@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getPublicSiteMetadata } from "@/lib/seo/public";
+import { getSiteUrl } from "@/lib/seo/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,15 +19,34 @@ const defaultMetadata = {
 };
 
 export async function generateMetadata() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
-    return defaultMetadata;
-  }
-  const supabase = await createSupabaseServerClient();
-  const { data: settings, error } = await supabase.rpc("get_public_site_metadata");
-  if (error) throw new Error("Unable to load public site metadata.", { cause: error });
+  const settings = await getPublicSiteMetadata();
+  const title = settings.site_title || defaultMetadata.title;
+  const description = settings.site_description || defaultMetadata.description;
+  const image = "/opengraph-image";
+
   return {
-    title: settings?.site_title || defaultMetadata.title,
-    description: settings?.site_description || defaultMetadata.description,
+    metadataBase: getSiteUrl(),
+    title,
+    description,
+    applicationName: title,
+    openGraph: {
+      type: "website",
+      siteName: title,
+      title,
+      description,
+      images: [{ url: image, width: 1200, height: 630, alt: `${title} publication cover` }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: { index: true, follow: true, "max-image-preview": "large" },
+    },
   };
 }
 

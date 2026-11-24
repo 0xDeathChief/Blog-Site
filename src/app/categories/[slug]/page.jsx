@@ -9,6 +9,28 @@ import {
 
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata({ params, searchParams }) {
+  const [{ slug }, queryParams] = await Promise.all([params, searchParams]);
+  const { categories } = await getArticleDiscoveryOptions();
+  const category = categories.find((item) => item.slug === slug);
+  if (!category) {
+    return { title: "Category not found — CipherBrief", robots: { index: false, follow: false } };
+  }
+
+  const title = `${category.name} Cybersecurity Articles — CipherBrief`;
+  const description = `Explore ${category.articleCount} published cybersecurity ${category.articleCount === 1 ? "article" : "articles"} in ${category.name}.`;
+  const canonical = `/categories/${encodeURIComponent(category.slug)}`;
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { type: "website", title, description, url: canonical, images: ["/opengraph-image"] },
+    robots: Object.keys(queryParams ?? {}).length
+      ? { index: false, follow: true }
+      : { index: true, follow: true },
+  };
+}
+
 export default async function CategoryPage({ params, searchParams }) {
   const [{ slug }, queryParams] = await Promise.all([params, searchParams]);
   const options = await getArticleDiscoveryOptions();

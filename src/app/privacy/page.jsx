@@ -1,6 +1,6 @@
 import PublicPage from "@/components/public/PublicPage";
 
-export const metadata = { title: "Privacy Policy — CipherBrief" };
+export const metadata = { title: "Privacy Policy — CipherBrief", alternates: { canonical: "/privacy" } };
 
 export default function PrivacyPage() {
   return (

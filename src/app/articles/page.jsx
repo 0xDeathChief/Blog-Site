@@ -6,8 +6,25 @@ import {
   parseArticleDiscoveryFilters,
 } from "@/lib/articles/public";
 
-export const metadata = { title: "Articles — CipherBrief" };
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ searchParams }) {
+  const params = await searchParams;
+  const hasFilters = Object.keys(params ?? {}).length > 0;
+  return {
+    title: "Cybersecurity Articles — CipherBrief",
+    description: "Browse practical cybersecurity guides and research shared by the CipherBrief community.",
+    alternates: { canonical: "/articles" },
+    openGraph: {
+      type: "website",
+      title: "Cybersecurity Articles — CipherBrief",
+      description: "Browse practical cybersecurity guides and research shared by the CipherBrief community.",
+      url: "/articles",
+      images: ["/opengraph-image"],
+    },
+    robots: hasFilters ? { index: false, follow: true } : { index: true, follow: true },
+  };
+}
 
 export default async function ArticlesListingPage({ searchParams }) {
   const params = await searchParams;

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { requireOwnerApi, readJsonBody } from "@/lib/auth/api";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -61,6 +62,9 @@ export async function PUT(request, context) {
       updated_by: authorization.owner.id,
     }).select("setting_key, setting_value, updated_at").single();
     if (error) return NextResponse.json({ error: "Unable to update the website setting." }, { status: 502 });
+    if (parsed.data.settingKey === "site_title" || parsed.data.settingKey === "site_description") {
+      revalidateTag("site-settings", "max");
+    }
     return NextResponse.json({ setting: data });
   }
   return NextResponse.json({ error: "Unknown settings group." }, { status: 404 });

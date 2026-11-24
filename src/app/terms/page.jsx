@@ -1,6 +1,6 @@
 import PublicPage from "@/components/public/PublicPage";
 
-export const metadata = { title: "Terms and Conditions — CipherBrief" };
+export const metadata = { title: "Terms and Conditions — CipherBrief", alternates: { canonical: "/terms" } };
 
 export default function TermsPage() {
   return (

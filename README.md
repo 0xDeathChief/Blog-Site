@@ -21,6 +21,7 @@ npm run dev
 ```
 
 Open http://localhost:3000. The public homepage works without external credentials. Supabase or Ollama calls require the corresponding values in `.env.local`.
+Set `NEXT_PUBLIC_SITE_URL` to the canonical production origin before deployment; it defaults to `http://localhost:3000` for local work.
 
 ## Supabase and RBAC setup
 
@@ -100,6 +101,12 @@ Account administration is available at `GET`/`POST /api/admin/users` and `PATCH`
 - Reader workspace: `/profile`, `/bookmarks`, `/likes`, `/comments`, `/ai-conversations`, and `/reading-history`. Bookmarks, likes, comments, and reading history are stored per account under RLS. AI conversations are private, bounded records; clearing a conversation deletes its saved copy.
 
 Password reset links exchange their Supabase recovery code at `/auth/callback` before allowing a new password. The site owner can configure public site metadata and a contact email in the admin settings. Until a public contact email is configured, the contact page explains that no address is available.
+
+## SEO and performance
+
+Public pages use canonical URLs, dynamic article/category/tag/author metadata, Open Graph and Twitter cards, and `TechArticle` JSON-LD on published articles. The generated social preview is `/opengraph-image`; public sitemap and crawler rules are available at `/sitemap.xml` and `/robots.txt`. Search results and filtered listing URLs are excluded from indexing, and the sitemap contains only public pages and published articles.
+
+Published article data and discovery results are cached for five minutes; topic directories use ten minutes, and sitemap data uses one hour. Public-content updates invalidate the tagged caches. Public cover images use Next.js image optimization with the configured Supabase Storage host; card images remain lazy-loaded while featured/article hero images load eagerly.
 
 ## Learning assistant setup
 

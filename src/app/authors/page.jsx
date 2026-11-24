@@ -2,7 +2,7 @@ import DirectoryCards from "@/components/public/DirectoryCards";
 import PublicPage from "@/components/public/PublicPage";
 import { getPublicAuthors } from "@/lib/articles/public";
 
-export const metadata = { title: "Authors — CipherBrief" };
+export const metadata = { title: "Authors — CipherBrief", alternates: { canonical: "/authors" } };
 export const dynamic = "force-dynamic";
 
 export default async function AuthorsPage() {

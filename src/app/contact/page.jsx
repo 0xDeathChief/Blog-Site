@@ -3,7 +3,7 @@ import { Mail, MessageSquareText } from "lucide-react";
 import PublicPage from "@/components/public/PublicPage";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Contact — CipherBrief" };
+export const metadata = { title: "Contact — CipherBrief", alternates: { canonical: "/contact" } };
 export const dynamic = "force-dynamic";
 
 export default async function ContactPage() {
