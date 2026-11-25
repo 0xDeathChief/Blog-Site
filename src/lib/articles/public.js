@@ -1,6 +1,7 @@
 import "server-only";
 
 import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
 
 const hasSupabaseConfiguration = Boolean(
@@ -33,7 +34,7 @@ export function parseArticleDiscoveryFilters(params, defaults = {}) {
       : defaults.tagSlug ?? "",
     difficulty: difficultyValues.has(difficultyValue) ? difficultyValue : "",
     authorId: uuidPattern.test(authorValue) ? authorValue : defaults.authorId ?? "",
-    sort: sortValue === "popularity" ? "popularity" : "newest",
+    sort: ["newest","popularity","relevance"].includes(sortValue) ? sortValue : queryValue.trim() ? "relevance" : "newest",
     page: Number.isSafeInteger(pageValue) && pageValue > 0 ? Math.min(pageValue, 10000) : 1,
   };
 }
@@ -66,28 +67,19 @@ const loadPublishedArticlePage = unstable_cache(async (filters) => {
     return { articles: [], total, page, pageSize: ARTICLE_PAGE_SIZE, totalPages };
   }
 
-  const { data: authors, error: authorError } = await supabase.rpc(
-    "get_published_article_authors",
-    { article_ids: rawArticles.map((article) => article.id) },
-  );
-  if (authorError) throw new Error("Unable to load published article authors.", { cause: authorError });
-  const authorByArticleId = new Map(
-    (authors ?? []).map((author) => [author.article_id, author.author_name]),
-  );
-
   const articles = rawArticles.map((article) => ({
     ...article,
     category: article.category ?? "Cybersecurity",
-    author: authorByArticleId.get(article.id) ?? "Former member",
+    author: article.author_name ?? "Former member",
     likeCount: Number(article.like_count) || 0,
     tags: [],
     coverUrl: article.cover_image_path
-      ? supabase.storage.from("article-covers").getPublicUrl(article.cover_image_path).data.publicUrl
+      ? `/api/article-media/${article.cover_image_path}`
       : null,
   }));
   return { articles, total, page, pageSize: ARTICLE_PAGE_SIZE, totalPages };
-}, ["published-article-page-v1"], {
-  revalidate: 300,
+}, ["published-article-page-v2"], {
+  revalidate: 60,
   tags: ["published-content"],
 });
 
@@ -98,7 +90,7 @@ export async function getPublishedArticlePage(filters) {
   return loadPublishedArticlePage(filters);
 }
 
-const loadPublishedArticleBySlug = unstable_cache(async (slug) => {
+const loadPublishedArticleBySlug = cache(async (slug) => {
   const supabase = createSupabasePublicClient();
   const { data: article, error } = await supabase
     .from("articles")
@@ -119,12 +111,9 @@ const loadPublishedArticleBySlug = unstable_cache(async (slug) => {
     article,
     authorName: authors?.[0]?.author_name ?? "Former member",
     coverUrl: article.cover_image
-      ? supabase.storage.from("article-covers").getPublicUrl(article.cover_image).data.publicUrl
+      ? `/api/article-media/${article.cover_image}`
       : null,
   };
-}, ["published-article-by-slug-v1"], {
-  revalidate: 300,
-  tags: ["published-content"],
 });
 
 export async function getPublishedArticleBySlug(slug) {

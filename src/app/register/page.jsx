@@ -1,19 +1,6 @@
 import Link from "next/link";
-import { ShieldCheck, UserRoundPlus } from "lucide-react";
-
-export const metadata = { title: "Registration — CipherBrief" };
-
-export default function RegistrationPage() {
-  return (
-    <main className="auth-page">
-      <Link className="brand auth-brand" href="/"><span className="brand-mark"><ShieldCheck size={17} /></span><span>CIPHER<span>BRIEF</span></span></Link>
-      <section className="auth-card">
-        <span className="section-kicker">JOIN THE COMMUNITY</span>
-        <h1>Accounts are invitation-only.</h1>
-        <p>CipherBrief does not accept public self-registration. The owner invites contributors, editors, and readers to protect the publication and its community.</p>
-        <div className="auth-notice"><UserRoundPlus size={19} /><span>Already received an invitation? Follow the secure link in your email to activate your account.</span></div>
-        <Link className="primary-button auth-action-link" href="/sign-in">Continue to sign in</Link>
-      </section>
-    </main>
-  );
-}
+import { ShieldCheck } from "lucide-react";
+import ThemeToggle from "@/components/layout/ThemeToggle";
+import RegisterForm from "@/components/auth/RegisterForm";
+export const metadata={title:"Join MadQuill",robots:{index:false,follow:false}};
+export default function RegisterPage(){return <main className="auth-page"><Link className="brand auth-brand" href="/"><span className="brand-mark"><img src="/branding/madquill-icon.png" alt="" width={36} height={36} /></span><span>Mad<span>Quill</span></span></Link><div className="cb-auth-theme"><ThemeToggle/></div><section className="auth-card"><span className="section-kicker">COMMUNITY ACCESS</span><h1>Write. Share. Learn.</h1><p>Create your account to submit stories for editorial review.</p><RegisterForm/><div className="auth-page-links"><Link href="/sign-in">Already a member? Sign in</Link></div></section></main>}

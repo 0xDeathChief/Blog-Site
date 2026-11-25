@@ -1,18 +1,15 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import ArticleEditor from "@/components/articles/ArticleEditor";
-import AssistantChat from "@/components/ai/AssistantChat";
+import PublishedContent from "@/components/articles/PublishedContent";
+import ReaderPreferences from "./ReaderPreferences";
 import ArticleInteractions from "@/components/articles/ArticleInteractions";
-import ArticleTranslationTools from "@/components/articles/ArticleTranslationTools";
 
 export default function ArticleLearningExperience({
-  articleSlug,
+  cover,
   articleId,
   articlePath,
   isReader,
   comments,
+  engagement,
   category,
   categorySlug,
   title,
@@ -25,64 +22,43 @@ export default function ArticleLearningExperience({
   tags,
   content,
 }) {
-  const [selection, setSelection] = useState("");
-  const [translatedArticle, setTranslatedArticle] = useState(null);
-  const [translationMeta, setTranslationMeta] = useState(null);
-  const [showTranslation, setShowTranslation] = useState(false);
-  const displayedArticle = showTranslation && translatedArticle ? translatedArticle : null;
-
   return (
     <>
       <header className="published-article-header">
         <Link className="article-category" href={categorySlug ? `/categories/${categorySlug}` : "/categories"}>{category}</Link>
-        <h1>{displayedArticle?.title ?? title}</h1>
-        <p className="published-article-summary">{displayedArticle?.summary ?? summary}</p>
+        <h1>{title}</h1>
+        <p className="published-article-summary">{summary}</p>
         <div className="published-article-meta">
           <span>By {authorId ? <Link href={`/authors/${authorId}`}>{authorName}</Link> : authorName}</span>
           <span>{publishedDate}</span>
           <span>{readingTime} min read</span>
           <span>{capitalize(difficulty)}</span>
         </div>
-        {tags.length > 0 && (
+        {tags.filter(tag => tag.name?.toLowerCase() !== category?.toLowerCase() && tag.name?.toLowerCase() !== difficulty?.toLowerCase()).length > 0 && (
           <div className="published-article-tags">
-            {tags.map((tag) => <Link href={`/tags/${tag.slug}`} key={tag.slug}>{tag.name}</Link>)}
+            {tags.filter(tag => tag.name?.toLowerCase() !== category?.toLowerCase() && tag.name?.toLowerCase() !== difficulty?.toLowerCase()).map((tag) => <Link href={`/tags/${tag.slug}`} key={tag.slug}>{tag.name}</Link>)}
           </div>
         )}
       </header>
+      <ReaderPreferences key={articleId}>
+      {cover}
       <div className="article-learning-layout">
         <div className="article-reading-column">
-          <ArticleTranslationTools
-            articleSlug={articleSlug}
-            translatedContent={translatedArticle}
-            translationMeta={translationMeta}
-            showTranslation={showTranslation}
-            onTranslatedContent={(articleTranslation, metadata) => {
-              setTranslatedArticle(articleTranslation);
-              setTranslationMeta(metadata);
-            }}
-            onShowTranslation={setShowTranslation}
-          />
-          <ArticleEditor
-            key={displayedArticle ? "translated-article" : "original-article"}
-            content={displayedArticle?.content ?? content}
-            readOnly
-            onTextSelection={setSelection}
-          />
+          <PublishedContent content={content} />
         </div>
-        <aside className="article-assistant-sidebar" aria-label="Ask about this article">
-          <AssistantChat articleSlug={articleSlug} selection={selection} />
-        </aside>
       </div>
+      </ReaderPreferences>
       <ArticleInteractions
         articleId={articleId}
         articlePath={articlePath}
         isReader={isReader}
         comments={comments}
+        engagement={engagement}
       />
     </>
   );
 }
 
 function capitalize(value) {
-  return value.charAt(0).toUpperCase() + value.slice(1);
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
 }

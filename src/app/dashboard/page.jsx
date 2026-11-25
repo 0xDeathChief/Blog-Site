@@ -5,7 +5,7 @@ import PortalArticles, { PortalStats } from "@/components/portal/PortalArticles"
 import { requireArticlePage } from "@/lib/articles/page-access";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Contributor overview — CipherBrief" };
+export const metadata = { title: "Contributor overview — MadQuill" };
 export const dynamic = "force-dynamic";
 
 export default async function ContributorOverviewPage() {

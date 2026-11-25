@@ -17,6 +17,6 @@ export async function POST(request) {
     featured: parsed.data.featured,
   });
   if (error) return NextResponse.json({ error: "Unable to update featured content." }, { status: error.code === "P0002" ? 404 : 502 });
-  revalidateTag("published-content", "max");
+  revalidateTag("published-content", { expire: 0 });
   return NextResponse.json({ status: "updated" });
 }

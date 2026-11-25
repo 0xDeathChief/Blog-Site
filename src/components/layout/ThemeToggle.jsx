@@ -19,21 +19,17 @@ export default function ThemeToggle() {
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    let initialTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light";
-
-    try {
-      const savedTheme = window.localStorage.getItem("cipherbrief-theme");
-      if (savedTheme === "light" || savedTheme === "dark") {
-        initialTheme = savedTheme;
-      }
-    } catch {
-      // Use the system preference when browser storage is unavailable.
-    }
-
-    document.documentElement.dataset.theme = initialTheme;
+    // Root layout initialized the attribute before paint. Do not reset it on remount.
     window.dispatchEvent(new Event(themeEvent));
+    const onStorage = (event) => {
+      if (event.key === "cipherbrief-theme" && ["dark", "light"].includes(event.newValue)) {
+        document.documentElement.dataset.theme = event.newValue;
+        document.documentElement.style.colorScheme = event.newValue;
+        window.dispatchEvent(new Event(themeEvent));
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   useEffect(() => {
@@ -45,6 +41,7 @@ export default function ThemeToggle() {
   function toggleTheme() {
     const nextTheme = theme === "dark" ? "light" : "dark";
     document.documentElement.dataset.theme = nextTheme;
+    document.documentElement.style.colorScheme = nextTheme;
     window.dispatchEvent(new Event(themeEvent));
 
     try {

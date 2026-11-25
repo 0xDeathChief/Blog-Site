@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import ThemeToggle from "@/components/layout/ThemeToggle";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, ShieldCheck } from "lucide-react";
@@ -27,10 +28,10 @@ export default function PortalHeader({ displayName, role }) {
 
   return (
     <header className="portal-header">
-      <Link className="brand" href="/"><span className="brand-mark"><ShieldCheck size={17} /></span><span>CIPHER<span>BRIEF</span></span></Link>
+      <Link className="brand" href="/"><span className="brand-mark"><img src="/branding/madquill-icon.png" alt="" width={36} height={36} /></span><span>Mad<span>Quill</span></span></Link>
       <div className="portal-account">
         <span>{displayName}<small>{role}</small></span>
-        <Link href="/profile">Profile</Link>
+        <Link href="/">View site</Link><Link href="/profile">Profile</Link><ThemeToggle />
         <button type="button" onClick={signOut} disabled={busy}><LogOut size={15} />{busy ? "Signing out..." : "Sign out"}</button>
       </div>
       {error && <span className="portal-header-error" role="alert">{error}</span>}

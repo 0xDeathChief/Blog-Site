@@ -59,7 +59,7 @@ export async function POST(request) {
   }
 
   const article = parsedArticle.data;
-  const { data: articleId, error } = await authorization.supabase.rpc("save_article", {
+  const { data: articleId, error } = await authorization.supabase.rpc("cb_save_article_with_category", {
     target_article_id: article.id ?? null,
     article_title: article.title,
     article_slug: article.slug,
@@ -69,6 +69,7 @@ export async function POST(request) {
     article_cover_image_path: article.coverImagePath,
     article_difficulty: article.difficulty,
     article_tag_ids: article.tagIds,
+    article_category_suggestion: article.categorySuggestion ?? "",
   });
 
   if (error) {
@@ -82,7 +83,7 @@ export async function POST(request) {
         error: status === 409
           ? "That article slug is already in use."
           : status === 400
-            ? "The selected category or tags are no longer available."
+            ? "Check article content, category, tags, and image limits."
             : "Unable to save the article.",
       },
       { status },

@@ -7,7 +7,7 @@ import {
 } from "@/lib/articles/public";
 
 export const metadata = {
-  title: "Search — CipherBrief",
+  title: "Search — MadQuill",
   robots: { index: false, follow: true },
   alternates: { canonical: "/search" },
 };

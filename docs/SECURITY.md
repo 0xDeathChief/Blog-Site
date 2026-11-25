@@ -41,7 +41,7 @@ CipherBrief uses layered controls: Supabase Auth identifies users, server code c
 ## Secrets and configuration
 
 - `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` are public configuration values. Data confidentiality and integrity depend on server authorization and correctly applied RLS policies.
-- `SUPABASE_SERVICE_ROLE_KEY` is privileged. It is read only in server-only modules for administrative operations and must never be given a `NEXT_PUBLIC_` prefix, returned to the browser, or placed in client components.
+- `SUPABASE_SECRET_KEY` is privileged. It is read only in server-only modules for administrative operations and must never be given a `NEXT_PUBLIC_` prefix, returned to the browser, or placed in client components.
 - Keep Ollama URLs, private provider credentials, database credentials, and all other secrets in the deployment's protected environment-variable store. `.env*` files are ignored by Git except for the placeholder `.env.example`; never put real credentials in that example or commit them.
 - Restrict access to production environment settings, rotate exposed credentials immediately, and use separate credentials/projects for development and production.
 

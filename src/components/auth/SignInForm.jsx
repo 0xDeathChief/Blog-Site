@@ -6,6 +6,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 export default function SignInForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -56,7 +57,7 @@ export default function SignInForm() {
         Email
         <input
           type="email"
-          autoComplete="email"
+          autoComplete="email" maxLength={254}
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
@@ -65,18 +66,19 @@ export default function SignInForm() {
       <label>
         Password
         <input
-          type="password"
-          autoComplete="current-password"
+          type={showPassword ? "text" : "password"}
+          autoComplete="current-password" maxLength={128}
           required
           value={password}
           onChange={(event) => setPassword(event.target.value)}
         />
       </label>
+      <button className="cb-password-toggle" type="button" aria-pressed={showPassword} onClick={() => setShowPassword(v => !v)}>{showPassword ? "Hide password" : "Show password"}</button>
       {error && <p className="form-error" role="alert">{error}</p>}
       <button className="primary-button" type="submit" disabled={loading}>
         {loading ? "Signing in..." : "Sign in"}
       </button>
-      <small>Accounts are provided by the CipherBrief owner.</small>
+      <small>Verified members can write and submit articles.</small>
     </form>
   );
 }

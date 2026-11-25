@@ -56,6 +56,7 @@ export const saveArticleSchema = z.object({
   summary: z.string().trim().min(20).max(280),
   content: z.unknown(),
   categoryId: z.string().uuid(),
+  categorySuggestion: z.string().trim().max(80).optional(),
   coverImagePath: z.string().max(256).nullable(),
   difficulty: z.enum(["beginner", "intermediate", "advanced", "expert"]),
   tagIds: z.array(z.string().uuid()).max(10).refine((ids) => new Set(ids).size === ids.length),
@@ -68,6 +69,7 @@ export const articleActionSchema = z.object({
     "request_revision",
     "reject",
     "approve",
+    "approve_publish",
     "publish",
     "unpublish",
   ]),
@@ -76,6 +78,7 @@ export const articleActionSchema = z.object({
 
 function safeUrl(value, { image = false } = {}) {
   if (typeof value !== "string" || value.length > 2048) return null;
+  if (image) return /^\/api\/article-media\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|avif)$/.test(value) ? value : null;
   try {
     const url = new URL(value);
     const allowedProtocols = image ? ["https:"] : ["https:", "http:", "mailto:"];

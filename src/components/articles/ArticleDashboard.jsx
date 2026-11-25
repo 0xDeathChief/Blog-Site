@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import ThemeToggle from "@/components/layout/ThemeToggle";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FilePlus2, LogOut, Search, ShieldCheck } from "lucide-react";
@@ -38,10 +39,11 @@ export default function ArticleDashboard({ role, displayName, articles }) {
       <div className="shell">
         <header className="management-header">
           <Link className="brand" href="/">
-            <span className="brand-mark"><ShieldCheck size={17} /></span>
-            <span>CIPHER<span>BRIEF</span></span>
+            <span className="brand-mark"><img src="/branding/madquill-icon.png" alt="" width={36} height={36} /></span>
+            <span>Mad<span>Quill</span></span>
           </Link>
           <div className="management-account">
+            <ThemeToggle />
             <span>{displayName} <small>{role}</small></span>
             <button type="button" className="signout-button" onClick={signOut} disabled={signingOut}>
               <LogOut size={15} /> {signingOut ? "Signing out..." : "Sign out"}
@@ -50,7 +52,7 @@ export default function ArticleDashboard({ role, displayName, articles }) {
         </header>
         <div className="dashboard-heading">
           <div>
-            <span className="section-kicker">CIPHERBRIEF · {role.toUpperCase()} WORKSPACE</span>
+            <span className="section-kicker">MADQUILL · {role.toUpperCase()} WORKSPACE</span>
             <h1>Article management</h1>
             <p>Create, revise, and review security writing through a clear editorial process.</p>
           </div>
@@ -86,7 +88,7 @@ export default function ArticleDashboard({ role, displayName, articles }) {
                     <tr key={article.id}>
                       <td><Link className="article-table-title" href={`/dashboard/articles/${article.id}`}>{article.title}</Link><small>{article.categories?.name ?? "Uncategorized"} · {article.reading_time_minutes} min read</small></td>
                       <td>{article.author_name}</td>
-                      <td><span className={`status-pill status-${article.status}`}>{article.status.replaceAll("_", " ")}</span></td>
+                      <td><span className={`status-pill status-${article.status}`}>{article.status.replaceAll("_", " ")}</span>{article.status==="published"&&<Link className="cb-public-article-link" href={`/articles/${article.slug}`} target="_blank" rel="noopener noreferrer">View live ↗</Link>}</td>
                       <td>{capitalize(article.difficulty)}</td>
                       <td>{new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(article.updated_at))}</td>
                       <td><Link className="row-action" href={`/dashboard/articles/${article.id}`}>Open</Link></td>

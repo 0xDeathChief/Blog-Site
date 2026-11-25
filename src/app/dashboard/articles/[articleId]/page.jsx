@@ -15,7 +15,7 @@ export default async function ArticlePage({ params }) {
   const [articleResult, categoriesResult, tagsResult, revisionsResult, eventsResult, feedbackResult] = await Promise.all([
     supabase
       .from("articles")
-      .select("id, author_id, title, slug, summary:excerpt, content, status, difficulty, reading_time_minutes:reading_time, category_id, cover_image_path:cover_image, updated_at, categories(name), article_tags(tag_id, tags(id, name, slug))")
+      .select("id, author_id, title, slug, summary:excerpt, content, status, difficulty, reading_time_minutes:reading_time, category_id, category_suggestion, cover_image_path:cover_image, updated_at, categories(name), article_tags(tag_id, tags(id, name, slug))")
       .eq("id", articleId)
       .maybeSingle(),
     supabase.from("categories").select("id, name").eq("is_active", true).order("name"),
@@ -59,7 +59,7 @@ export default async function ArticlePage({ params }) {
   if (authorError) throw new Error("Unable to load the article author.", { cause: authorError });
 
   const coverUrl = articleResult.data.cover_image_path
-    ? supabase.storage.from("article-covers").getPublicUrl(articleResult.data.cover_image_path).data.publicUrl
+    ? `/api/article-media/${articleResult.data.cover_image_path}`
     : null;
 
   return (

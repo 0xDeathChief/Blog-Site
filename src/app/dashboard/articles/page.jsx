@@ -2,7 +2,7 @@ import ArticleDashboard from "@/components/articles/ArticleDashboard";
 import { requireArticlePage } from "@/lib/articles/page-access";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Article workspace — CipherBrief" };
+export const metadata = { title: "Article workspace — MadQuill" };
 export const dynamic = "force-dynamic";
 
 export default async function ArticlesPage() {

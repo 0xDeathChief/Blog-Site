@@ -6,7 +6,7 @@ import ArticleLearningExperience from "@/components/articles/ArticleLearningExpe
 import { getCurrentPrincipal } from "@/lib/auth/authorization";
 import { getPublishedArticleBySlug } from "@/lib/articles/public";
 import { getSiteUrl } from "@/lib/seo/site";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabasePublicClient } from "@/lib/supabase/public";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ export async function generateMetadata({ params }) {
   const { slug } = await params;
   const articleData = await getPublishedArticleBySlug(slug);
   if (!articleData) {
-    return { title: "Article not found — CipherBrief", robots: { index: false, follow: false } };
+    return { title: "Article not found — MadQuill", robots: { index: false, follow: false } };
   }
   const { article, authorName, coverUrl } = articleData;
   const description = toMetaDescription(article.excerpt);
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }) {
   const image = coverUrl || "/opengraph-image";
 
   return {
-    title: `${article.title} — CipherBrief`,
+    title: `${article.title} — MadQuill`,
     description,
     alternates: { canonical },
     openGraph: {
@@ -52,11 +52,12 @@ export default async function PublishedArticlePage({ params }) {
   if (!articleData) notFound();
   const { article, authorName, coverUrl } = articleData;
 
-  const [commentsResult, principal] = await Promise.all([
+  const [commentsResult, principal, engagementResult] = await Promise.all([
     loadComments(article.id),
     getCurrentPrincipal(),
+    createSupabasePublicClient().from("cb_article_engagement").select("view_count,comment_count,like_count").eq("article_id",article.id).maybeSingle(),
   ]);
-  if (commentsResult.error) throw new Error("Unable to load article comments.", { cause: commentsResult.error });
+  // Comments and engagement are nonessential: allow reading during a temporary service failure.
 
   const tags = (article.article_tags ?? []).map(({ tags }) => tags).filter(Boolean);
   const articleUrl = new URL(`/articles/${article.slug}`, getSiteUrl()).toString();
@@ -75,7 +76,7 @@ export default async function PublishedArticlePage({ params }) {
     },
     publisher: {
       "@type": "Organization",
-      name: "CipherBrief",
+      name: "MadQuill",
       url: getSiteUrl().toString(),
     },
     mainEntityOfPage: articleUrl,
@@ -93,11 +94,12 @@ export default async function PublishedArticlePage({ params }) {
       <SiteHeader />
       <article className="published-article-page">
         <div className="shell published-article-shell">
-          <Link className="back-link" href="/#latest">← Latest articles</Link>
-          {coverUrl && (
+          <Link className="back-link" href="/articles">← Discover articles</Link>
+          <ArticleLearningExperience
+            cover={coverUrl && (
             <div className="published-article-cover">
               <Image
-                src={coverUrl}
+                src={coverUrl} unoptimized
                 alt={`${article.title} cover`}
                 width={1280}
                 height={640}
@@ -106,12 +108,12 @@ export default async function PublishedArticlePage({ params }) {
               />
             </div>
           )}
-          <ArticleLearningExperience
             articleSlug={article.slug}
             articleId={article.id}
             articlePath={`/articles/${article.slug}`}
-            isReader={principal?.role === "reader"}
+            isReader={Boolean(principal)}
             comments={commentsResult.data ?? []}
+            engagement={engagementResult.data ?? {}}
             category={article.categories?.name ?? "Cybersecurity"}
             categorySlug={article.categories?.slug}
             title={article.title}
@@ -125,7 +127,7 @@ export default async function PublishedArticlePage({ params }) {
             content={article.content}
           />
           <footer className="published-article-footer">
-            <span>Reviewed and published by the CipherBrief editorial team.</span>
+            <span>Reviewed and published by the MadQuill editorial team.</span>
             <Link href="/">Explore more security writing</Link>
           </footer>
         </div>
@@ -135,18 +137,18 @@ export default async function PublishedArticlePage({ params }) {
 }
 
 async function loadComments(articleId) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabasePublicClient();
   return supabase
     .from("comments")
-    .select("id, body:content, created_at")
+    .select("id, body:content, created_at, display_name, is_guest")
     .eq("article_id", articleId)
     .eq("status", "published")
-    .order("created_at", { ascending: true })
+    .order("created_at", { ascending: false })
     .limit(100);
 }
 
 function toMetaDescription(value) {
-  return (value || "Cybersecurity research and practical learning from CipherBrief.")
+  return (value || "Cybersecurity research and practical learning from MadQuill.")
     .replace(/[\r\n\t]+/g, " ")
     .replace(/\s+/g, " ")
     .trim()

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function DirectoryCards({ items, type }) {
   if (!items.length) {
-    return <div className="empty-state public-empty-state"><strong>Nothing to show yet.</strong><p>Check back as the CipherBrief community grows.</p></div>;
+    return <div className="empty-state public-empty-state"><strong>Nothing to show yet.</strong><p>Check back as the MadQuill community grows.</p></div>;
   }
 
   return (

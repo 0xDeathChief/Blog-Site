@@ -14,10 +14,10 @@ export async function generateMetadata({ params, searchParams }) {
   const { tags } = await getArticleDiscoveryOptions();
   const tag = tags.find((item) => item.slug === slug);
   if (!tag) {
-    return { title: "Tag not found — CipherBrief", robots: { index: false, follow: false } };
+    return { title: "Tag not found — MadQuill", robots: { index: false, follow: false } };
   }
 
-  const title = `${tag.name} Security Articles — CipherBrief`;
+  const title = `${tag.name} Security Articles — MadQuill`;
   const description = `Browse ${tag.articleCount} published cybersecurity ${tag.articleCount === 1 ? "article" : "articles"} tagged ${tag.name}.`;
   const canonical = `/tags/${encodeURIComponent(tag.slug)}`;
   return {

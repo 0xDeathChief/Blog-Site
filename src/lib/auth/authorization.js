@@ -24,9 +24,11 @@ export class AuthorizationError extends Error {
 }
 
 export async function getCurrentPrincipal() {
+  if (process.env.APP_MODE === "preview") return null;
   const supabase = await createSupabaseServerClient();
   const { data: authData, error: authError } = await supabase.auth.getUser();
 
+  if (authError?.name === "AuthSessionMissingError") return null;
   if (authError) {
     throw new Error("Unable to verify the current session.", { cause: authError });
   }

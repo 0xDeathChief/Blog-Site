@@ -1,8 +1,12 @@
+"use client";
+import {useRouter} from "next/navigation";
 import { ArrowRight, Search, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function ArticleExplorer({ articles }) {
+  const router=useRouter();
+  function submitSearch(event){event.preventDefault();const term=String(new FormData(event.currentTarget).get("q")??"").trim();router.push(term?`/search?q=${encodeURIComponent(term)}`:"/search");}
   return (
     <section className="latest-section" id="latest">
       <div className="shell">
@@ -12,7 +16,7 @@ export default function ArticleExplorer({ articles }) {
             <h2 id="topics">Latest intelligence</h2>
           </div>
           <Link className="all-articles-link" href="/articles">Browse all articles <ArrowRight size={15} /></Link>
-          <form className="article-search" action="/search" method="get">
+          <form className="article-search" action="/search" method="get" onSubmit={submitSearch}>
             <Search size={17} aria-hidden="true" />
             <input
               id="article-search"
@@ -34,7 +38,7 @@ export default function ArticleExplorer({ articles }) {
                   {article.coverUrl ? (
                     <Image
                       className="article-cover"
-                      src={article.coverUrl}
+                      src={article.coverUrl} unoptimized
                       alt=""
                       width={720}
                       height={360}

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "Access denied — CipherBrief" };
+export const metadata = { title: "Access denied — MadQuill" };
 
 export default function AccessDeniedPage() {
   return (
@@ -9,7 +9,7 @@ export default function AccessDeniedPage() {
         <span className="section-kicker">ACCESS CONTROL</span>
         <h1>This workspace is restricted.</h1>
         <p>Your current account does not have permission to access article management.</p>
-        <Link className="primary-button" href="/">Return to CipherBrief</Link>
+        <Link className="primary-button" href="/">Return to MadQuill</Link>
       </section>
     </main>
   );

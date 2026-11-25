@@ -1,4 +1,8 @@
+"use client";
 import Link from "next/link";
+import {useState,useTransition} from "react";
+import {useRouter} from "next/navigation";
+import {SlidersHorizontal,Search} from "lucide-react";
 import ArticleCards from "@/components/public/ArticleCards";
 
 const difficultyOptions = [
@@ -15,6 +19,19 @@ export default function ArticleDiscovery({
   action,
   emptyMessage,
 }) {
+  const router = useRouter();
+  const [open,setOpen] = useState(false);
+  const [list,setList] = useState(false);
+  const [pending,startTransition] = useTransition();
+  const activeCount = [filters.categorySlug, filters.tagSlug, filters.difficulty, filters.authorId].filter(Boolean).length;
+  function submitFilters(event) {
+    event.preventDefault();
+    const params = new URLSearchParams();
+    for (const [name,value] of new FormData(event.currentTarget)) if(typeof value === "string" && value.trim()) params.set(name,value.trim());
+    if(!params.get("q") && params.get("sort")==="relevance") params.delete("sort");
+    startTransition(()=>router.push(`${action}${params.size ? `?${params}` : ""}`, {scroll:false}));
+    setOpen(false);
+  }
   const pageHref = (page) => buildPageHref(action, filters, page);
   const pages = getVisiblePages(results.page, results.totalPages);
   const firstResult = results.total ? (results.page - 1) * results.pageSize + 1 : 0;
@@ -22,7 +39,8 @@ export default function ArticleDiscovery({
 
   return (
     <>
-      <form className="discovery-filters" action={action} method="get">
+      <form className="cb-discovery-form" action={action} method="get" onSubmit={submitFilters} key={JSON.stringify(filters)}>
+        <div className="cb-discovery-bar">
         <label className="discovery-query">
           Search
           <input
@@ -33,6 +51,10 @@ export default function ArticleDiscovery({
             placeholder="Search titles, topics, and article text"
           />
         </label>
+          <button type="submit" className="primary-button" disabled={pending}><Search size={16}/> Search</button>
+          <button type="button" className="secondary-button cb-filter-toggle" aria-expanded={open} aria-controls="cb-filter-panel" onClick={()=>setOpen(v=>!v)}><SlidersHorizontal size={16}/> Filters{activeCount ? ` (${activeCount})` : ""}</button>
+        </div>
+        <div className="discovery-filters cb-filter-panel" id="cb-filter-panel" hidden={!open}>
         <label>
           Category
           <select name="category" defaultValue={filters.categorySlug}>
@@ -69,23 +91,29 @@ export default function ArticleDiscovery({
         </label>
         <label>
           Sort by
-          <select name="sort" defaultValue={filters.sort}>
+          <select name="sort" defaultValue={filters.sort === "newest" && !filters.query ? "" : filters.sort}>
+            <option value="">Automatic (relevant / latest)</option>
+            <option value="relevance">Most relevant</option>
             <option value="newest">Newest</option>
-            <option value="popularity">Popularity</option>
+            <option value="popularity">Trending</option>
           </select>
         </label>
         <div className="discovery-filter-actions">
-          <button className="primary-button" type="submit">Apply filters</button>
+          <button className="primary-button" type="submit" disabled={pending}>Apply filters</button>
           <Link href={action}>Clear all</Link>
         </div>
+        </div>
       </form>
+      {activeCount > 0 && <div className="cb-filter-summary"><span>{activeCount} active filter{activeCount===1?"":"s"}</span><Link href={action}>Clear all</Link></div>}
+      {pending && <p className="muted-copy" role="status">Updating results…</p>}
 
       <div className="discovery-results-summary" aria-live="polite">
         <span>{results.total ? `Showing ${firstResult}–${lastResult} of ${results.total} articles` : "0 articles found"}</span>
         {results.total > 0 && <span>Page {results.page} of {results.totalPages}</span>}
       </div>
 
-      <ArticleCards articles={results.articles} emptyMessage={emptyMessage} />
+      <div className="cb-discovery-layout-toggle"><button className="secondary-button" type="button" aria-pressed={list} onClick={()=>setList(v=>!v)}>{list?"Grid view":"List view"}</button></div>
+      <div className={list?"cb-discovery-list":undefined}><ArticleCards articles={results.articles} emptyMessage={emptyMessage} /></div>
 
       {results.totalPages > 1 && (
         <nav className="discovery-pagination" aria-label="Article pages">

@@ -14,10 +14,10 @@ export async function generateMetadata({ params, searchParams }) {
   const { categories } = await getArticleDiscoveryOptions();
   const category = categories.find((item) => item.slug === slug);
   if (!category) {
-    return { title: "Category not found — CipherBrief", robots: { index: false, follow: false } };
+    return { title: "Category not found — MadQuill", robots: { index: false, follow: false } };
   }
 
-  const title = `${category.name} Cybersecurity Articles — CipherBrief`;
+  const title = `${category.name} Cybersecurity Articles — MadQuill`;
   const description = `Explore ${category.articleCount} published cybersecurity ${category.articleCount === 1 ? "article" : "articles"} in ${category.name}.`;
   const canonical = `/categories/${encodeURIComponent(category.slug)}`;
   return {

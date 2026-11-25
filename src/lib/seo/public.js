@@ -17,5 +17,5 @@ export async function getPublicSiteMetadata() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
     return {};
   }
-  return loadPublicSiteMetadata();
+  try { return await loadPublicSiteMetadata(); } catch { return {}; }
 }

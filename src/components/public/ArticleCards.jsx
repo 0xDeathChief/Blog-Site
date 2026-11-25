@@ -15,7 +15,7 @@ export default function ArticleCards({ articles, emptyMessage = "No published ar
             {article.coverUrl
               ? <Image
                 className="article-cover"
-                src={article.coverUrl}
+                src={article.coverUrl} unoptimized
                 alt=""
                 width={720}
                 height={360}
@@ -28,7 +28,7 @@ export default function ArticleCards({ articles, emptyMessage = "No published ar
             <h2>{article.title}</h2>
             <p>{article.summary}</p>
             <div className="card-foot">
-              <span>By {article.author ?? "CipherBrief"}</span>
+              <span>By {article.author ?? "MadQuill"}</span>
               <span>{formatDate(article.published_at)} · {article.reading_time_minutes} min</span>
             </div>
           </div>

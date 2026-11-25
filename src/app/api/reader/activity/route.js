@@ -13,7 +13,7 @@ const activitySchema = z.object({
 });
 
 export async function GET(request) {
-  const context = await requireRoleApi(request, ["reader"]);
+  const context = await requireRoleApi(request, ["reader", "contributor", "editor", "owner"]);
   if (context.response) return context.response;
   const articleId = new URL(request.url).searchParams.get("articleId");
   if (!articleId || !z.string().uuid().safeParse(articleId).success) {
@@ -33,7 +33,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  const context = await requireRoleApi(request, ["reader"], { mutating: true });
+  const context = await requireRoleApi(request, ["reader", "contributor", "editor", "owner"], { mutating: true });
   if (context.response) return context.response;
   const parsedBody = await readJsonBody(request, { maxBytes: 8192 });
   if (parsedBody.response) return parsedBody.response;
@@ -58,7 +58,7 @@ export async function POST(request) {
       user_id: context.principal.id,
       article_id: articleId,
       content: body,
-    });
+    }).select("id,body:content,created_at,display_name,is_guest").single();
   } else {
     result = await context.supabase.from("article_reading_history").upsert(
       { user_id: context.principal.id, article_id: articleId, last_read_at: new Date().toISOString() },
@@ -71,11 +71,11 @@ export async function POST(request) {
   if (result.error) {
     return NextResponse.json({ error: action === "read" ? "Unable to update reading history." : "Unable to save this activity." }, { status: 502 });
   }
-  return NextResponse.json({ status: "saved" }, { status: 201 });
+  return NextResponse.json({ status: "saved", ...(action === "comment" ? {comment:result.data} : {}) }, { status: 201 });
 }
 
 export async function DELETE(request) {
-  const context = await requireRoleApi(request, ["reader"], { mutating: true });
+  const context = await requireRoleApi(request, ["reader", "contributor", "editor", "owner"], { mutating: true });
   if (context.response) return context.response;
   const parsedBody = await readJsonBody(request, { maxBytes: 4096 });
   if (parsedBody.response) return parsedBody.response;

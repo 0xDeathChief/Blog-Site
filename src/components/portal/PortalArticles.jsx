@@ -1,20 +1,25 @@
+"use client";
 import Link from "next/link";
+import {useState} from "react";
 
 export default function PortalArticles({ articles, empty = "No articles in this view." }) {
+  const [search,setSearch]=useState("");const [status,setStatus]=useState("");
+  const visible=articles.filter(a=>(!status||a.status===status)&&`${a.title} ${a.author_name??""}`.toLowerCase().includes(search.toLowerCase()));
   return (
     <section className="portal-card portal-table-card">
-      {articles.length ? (
+      <div className="cb-table-tools"><input aria-label="Search articles" placeholder="Search title or author…" value={search} onChange={e=>setSearch(e.target.value)}/><select aria-label="Filter status" value={status} onChange={e=>setStatus(e.target.value)}><option value="">All statuses</option>{[...new Set(articles.map(a=>a.status))].map(s=><option key={s} value={s}>{s.replaceAll("_"," ")}</option>)}</select><small>{visible.length} of {articles.length} articles loaded</small></div>
+      {visible.length ? (
         <div className="portal-table-scroll">
           <table className="portal-table">
             <thead><tr><th>Article</th><th>Author</th><th>Status</th><th>Updated</th><th /></tr></thead>
             <tbody>
-              {articles.map((article) => (
+              {visible.map((article) => (
                 <tr key={article.id}>
                   <td><Link href={`/dashboard/articles/${article.id}`}>{article.title}</Link><small>{article.categories?.name ?? "Uncategorized"} · {article.reading_time_minutes} min read</small></td>
                   <td>{article.author_name ?? "You"}</td>
-                  <td><span className={`status-pill status-${article.status}`}>{article.status.replaceAll("_", " ")}</span></td>
+                  <td><span className={`status-pill status-${article.status}`}>{article.status.replaceAll("_", " ")}</span>{article.status==="published"&&<Link className="cb-public-article-link" href={`/articles/${article.slug}`} target="_blank" rel="noopener noreferrer">View live ↗</Link>}</td>
                   <td>{formatDate(article.updated_at)}</td>
-                  <td><Link className="row-action" href={`/dashboard/articles/${article.id}`}>Open</Link></td>
+                  <td><Link className="row-action" href={`/dashboard/articles/${article.id}`}>{["submitted","in_review","approved"].includes(article.status) ? "Open review →" : "Open article →"}</Link></td>
                 </tr>
               ))}
             </tbody>

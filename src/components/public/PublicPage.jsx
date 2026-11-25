@@ -3,7 +3,7 @@ import SiteHeader from "@/components/layout/SiteHeader";
 
 export default function PublicPage({ kicker, title, description, children }) {
   return (
-    <main>
+    <main className="cb-public-shell">
       <SiteHeader />
       <section className="public-page">
         <div className="shell">
@@ -18,8 +18,8 @@ export default function PublicPage({ kicker, title, description, children }) {
       <footer className="site-footer">
         <div className="shell footer-content">
           <Link className="brand" href="/">
-            <span className="brand-mark">CB</span>
-            <span>CIPHER<span>BRIEF</span></span>
+            <span className="brand-mark"><img src="/branding/madquill-icon.png" alt="" width={36} height={36} /></span>
+            <span>Mad<span>Quill</span></span>
           </Link>
           <p>Clear security knowledge. Shared responsibly.</p>
           <nav className="public-footer-links" aria-label="Footer">

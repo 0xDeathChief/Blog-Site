@@ -21,7 +21,7 @@ export async function GET(request, context) {
 
   const { data: article, error } = await authorization.supabase
     .from("articles")
-    .select("id, author_id, title, slug, summary:excerpt, content, status, difficulty, reading_time_minutes:reading_time, category_id, cover_image_path:cover_image, updated_at, categories(name), article_tags(tag_id, tags(id, name, slug))")
+    .select("id, author_id, title, slug, summary:excerpt, content, status, difficulty, reading_time_minutes:reading_time, category_id, category_suggestion, cover_image_path:cover_image, updated_at, categories(name), article_tags(tag_id, tags(id, name, slug))")
     .eq("id", articleId)
     .maybeSingle();
 
@@ -86,7 +86,7 @@ export async function PATCH(request, context) {
   }
 
   const article = parsedArticle.data;
-  const { error } = await authorization.supabase.rpc("save_article", {
+  const { error } = await authorization.supabase.rpc("cb_save_article_with_category", {
     target_article_id: articleId,
     article_title: article.title,
     article_slug: article.slug,
@@ -96,6 +96,7 @@ export async function PATCH(request, context) {
     article_cover_image_path: article.coverImagePath,
     article_difficulty: article.difficulty,
     article_tag_ids: article.tagIds,
+    article_category_suggestion: article.categorySuggestion ?? "",
   });
 
   if (error) {
@@ -109,14 +110,14 @@ export async function PATCH(request, context) {
         error: status === 409
           ? "That article slug is already in use."
           : status === 400
-            ? "The selected category or tags are no longer available."
+            ? "Check article content, category, tags, and image limits."
             : "Unable to save the article.",
       },
       { status },
     );
   }
 
-  revalidateTag("published-content", "max");
+  revalidateTag("published-content", { expire: 0 });
   return NextResponse.json({ id: articleId });
 }
 
@@ -146,7 +147,7 @@ export async function POST(request, context) {
     return NextResponse.json({ error: "This article cannot make that workflow transition." }, { status });
   }
 
-  revalidateTag("published-content", "max");
+  revalidateTag("published-content", { expire: 0 });
   return NextResponse.json({ status: "updated" });
 }
 
@@ -166,6 +167,6 @@ export async function DELETE(request, context) {
     return NextResponse.json({ error: "Unable to delete this article." }, { status });
   }
 
-  revalidateTag("published-content", "max");
+  revalidateTag("published-content", { expire: 0 });
   return new NextResponse(null, { status: 204 });
 }

@@ -6,6 +6,7 @@ const supabaseConfigSchema = z.object({
 });
 
 export function getSupabaseConfig() {
+  if (process.env.APP_MODE === "preview") throw new Error("Database unavailable in local preview.");
   const result = supabaseConfigSchema.safeParse({
     url: process.env.NEXT_PUBLIC_SUPABASE_URL,
     publishableKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,

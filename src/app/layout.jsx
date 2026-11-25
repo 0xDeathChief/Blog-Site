@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { getPublicSiteMetadata } from "@/lib/seo/public";
 import { getSiteUrl } from "@/lib/seo/site";
 import "./globals.css";
+import EditorialMotion from "@/components/layout/EditorialMotion";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 const defaultMetadata = {
-  title: "CipherBrief — Cybersecurity Intelligence",
+  title: "MadQuill — Cybersecurity, Research & Technology",
   description: "Clear security research, practical guides, and community insights.",
 };
 
@@ -43,20 +44,25 @@ export async function generateMetadata() {
       images: [image],
     },
     robots: {
-      index: true,
+      index: process.env.APP_MODE !== "preview",
       follow: true,
-      googleBot: { index: true, follow: true, "max-image-preview": "large" },
+      googleBot: { index: process.env.APP_MODE !== "preview", follow: true, "max-image-preview": "large" },
     },
   };
 }
+
+// Fixed, user-independent script runs before body paint. Allow its hash in a future CSP.
+const themeBoot = `(function(){var t;try{t=localStorage.getItem('cipherbrief-theme')}catch(e){}if(t!=='dark'&&t!=='light'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t})()`;
 
 export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head><script dangerouslySetInnerHTML={{ __html: themeBoot }} /></head>
+      <body className="min-h-full flex flex-col">{process.env.APP_MODE === "preview" && <div className="local-preview-banner">Local preview · Database disconnected · Account actions disabled</div>}{children}<EditorialMotion /></body>
     </html>
   );
 }

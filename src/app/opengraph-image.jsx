@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "CipherBrief — cybersecurity intelligence";
+export const alt = "MadQuill — cybersecurity intelligence";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -22,7 +22,7 @@ export default function OpenGraphImage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "18px", color: "#b8f34a", fontSize: 24, fontWeight: 700, letterSpacing: 4 }}>
           <div style={{ width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #b8f34a", borderRadius: 10 }}>C</div>
-          CIPHERBRIEF
+          MADQUILL
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ color: "#b8d8c0", fontSize: 20, letterSpacing: 5 }}>EXPLORE · LEARN · SECURE</div>

@@ -11,40 +11,18 @@ const config = {
   likes: { title: "Liked articles", description: "Published writing you have appreciated." },
   comments: { title: "Your comments", description: "Comments you have posted on published articles." },
   "reading-history": { title: "Reading history", description: "Published articles you have opened, most recent first." },
-  "ai-conversations": { title: "AI conversations", description: "Your saved learning-assistant sessions." },
 };
 
 export default async function ReaderCollectionPage({ kind }) {
   const page = config[kind];
   if (!page) notFound();
-  const allowedRoles = kind === "ai-conversations"
-    ? ["owner", "editor", "contributor", "reader"]
-    : ["reader"];
+  const allowedRoles = ["reader", "contributor", "editor", "owner"];
   const principal = await requireArticlePage(allowedRoles, `/${kind}`);
   const supabase = await createSupabaseServerClient();
   const area = principal.role === "owner" ? "owner"
     : principal.role === "editor" ? "editor"
       : principal.role === "contributor" ? "contributor"
         : "reader";
-
-  if (kind === "ai-conversations") {
-    const { data, error } = await supabase.from("ai_conversations")
-      .select("id, title, created_at, updated_at, ai_messages(id)")
-      .eq("user_id", principal.id).order("updated_at", { ascending: false }).limit(100);
-    if (error) throw new Error("Unable to load your AI conversations.", { cause: error });
-    return (
-      <PortalFrame principal={principal} area={area} title={page.title} description={page.description}>
-        <div className="conversation-list">
-          {(data ?? []).length ? (data ?? []).map((item) => (
-            <article className="portal-card conversation-card" key={item.id}>
-              <div><h2>{item.title}</h2><p>{(item.ai_messages ?? []).length} messages · Updated {formatDate(item.updated_at)}</p></div>
-              <a className="secondary-button" href={`/ai-conversations/${item.id}`}>Open conversation</a>
-            </article>
-          )) : <div className="empty-state portal-card"><strong>No saved conversations yet.</strong><p>Sign in while using the assistant to keep a private history of your learning chats.</p></div>}
-        </div>
-      </PortalFrame>
-    );
-  }
 
   if (kind === "comments") {
     const { data, error } = await supabase.from("comments")
@@ -93,7 +71,7 @@ export default async function ReaderCollectionPage({ kind }) {
     ...article,
     author: authorById.get(article.id) ?? "Former member",
     coverUrl: article.cover_image_path
-      ? supabase.storage.from("article-covers").getPublicUrl(article.cover_image_path).data.publicUrl
+      ? `/api/article-media/${article.cover_image_path}`
       : null,
   }));
   return <PortalFrame principal={principal} area={area} title={page.title} description={page.description}><ArticleCards articles={cards} emptyMessage={`No ${page.title.toLowerCase()} yet.`} /></PortalFrame>;
@@ -104,7 +82,7 @@ export function ConversationDetail({ conversation }) {
     <div className="conversation-detail">
       {conversation.messages.map((message) => (
         <article className={`conversation-message conversation-${message.role}`} key={message.id}>
-          <strong>{message.role === "user" ? "You" : "CipherBrief assistant"}</strong>
+          <strong>{message.role === "user" ? "You" : "MadQuill assistant"}</strong>
           <ReactMarkdown>{message.content}</ReactMarkdown>
           {message.createdAt && <time dateTime={message.createdAt}>{formatDate(message.createdAt)}</time>}
         </article>

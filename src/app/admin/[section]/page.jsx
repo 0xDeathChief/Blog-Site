@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import AdminCatalog from "@/components/admin/AdminCatalog";
+import AdminComments from "@/components/admin/AdminComments";
 import FeaturedContent from "@/components/admin/FeaturedContent";
 import AdminSettings from "@/components/admin/AdminSettings";
 import AdminUsers from "@/components/admin/AdminUsers";
@@ -11,6 +12,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 const sectionTitles = {
+  comments: ["Comment moderation", "Review guest submissions and manage public discussion."],
   analytics: ["Analytics", "Account and article workflow counts."],
   users: ["User management", "Invite accounts, update access roles, deactivate, or delete accounts."],
   roles: ["Role management", "Assign platform roles to invited accounts. Only the owner can assign another owner."],
@@ -19,7 +21,6 @@ const sectionTitles = {
   categories: ["Category management", "Add categories, control their visibility, or remove unused topics."],
   tags: ["Tag management", "Organize published writing with useful, consistent tags."],
   featured: ["Featured content", "Choose which published article is highlighted as featured."],
-  "ai-settings": ["AI settings", "Configure the Ollama model and enable or disable assistant services."],
   "website-settings": ["Website settings", "Update the site metadata and public contact address."],
   "audit-logs": ["Audit logs", "Owner-only record of administrative and account actions."],
 };
@@ -32,20 +33,17 @@ export default async function AdminSectionPage({ params }) {
   const [title, description] = titleAndDescription;
   const supabase = await createSupabaseServerClient();
 
+  if (section === "comments") {
+    const select="id,article_id,display_name,is_guest,content,status,created_at,articles(title,slug)";
+    const [pending,other]=await Promise.all([supabase.from("comments").select(select).eq("status","pending").order("created_at",{ascending:false}).limit(100),supabase.from("comments").select(select).neq("status","pending").order("created_at",{ascending:false}).limit(100)]);
+    if(pending.error||other.error)throw new Error("Unable to load comment moderation.");
+    return <PortalFrame principal={principal} area="owner" title={title} description={description}><AdminComments comments={[...(pending.data??[]),...(other.data??[])]}/></PortalFrame>;
+  }
   if (section === "users" || section === "roles") {
     return <PortalFrame principal={principal} area="owner" title={title} description={description}><AdminUsers currentUserId={principal.id} /></PortalFrame>;
   }
   if (section === "categories" || section === "tags") {
     return <PortalFrame principal={principal} area="owner" title={title} description={description}><AdminCatalog kind={section} /></PortalFrame>;
-  }
-  if (section === "ai-settings") {
-    const { data, error } = await supabase.from("ai_settings").select("model_name, enabled").eq("id", 1).maybeSingle();
-    if (error) throw new Error("Unable to load AI settings.", { cause: error });
-    const initial = data ?? {
-      model_name: process.env.OLLAMA_MODEL ?? "",
-      enabled: Boolean(process.env.OLLAMA_MODEL),
-    };
-    return <PortalFrame principal={principal} area="owner" title={title} description={description}><AdminSettings kind="ai" initial={initial} /></PortalFrame>;
   }
   if (section === "website-settings") {
     const { data, error } = await supabase.from("site_settings").select("setting_key, setting_value").order("setting_key");

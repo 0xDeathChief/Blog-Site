@@ -17,7 +17,6 @@ export default function robots() {
         "/likes",
         "/comments",
         "/reading-history",
-        "/ai-conversations",
         "/api/",
       ],
     }],

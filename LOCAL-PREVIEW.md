@@ -1,0 +1,2 @@
+# Local preview
+Run `node scripts/local-preview.cjs` after `npm ci`. Public pages show existing empty states until a new database is connected. Protected routes are disabled. Old credentials are overridden in the child process. Do not deploy this preview. Original SQL migrations remain unchanged; AI schema removal and full RLS/RPC verification must be completed before applying migrations to a new Supabase project. Security headers added here are a baseline, not a production security certification.

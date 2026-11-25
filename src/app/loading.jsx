@@ -2,7 +2,7 @@ export default function Loading() {
   return (
     <main className="loading-page" aria-busy="true" aria-live="polite">
       <div className="shell">
-        <span className="section-kicker">CIPHERBRIEF</span>
+        <span className="section-kicker">MADQUILL</span>
         <div className="skeleton loading-title" />
         <div className="loading-grid">
           {[0, 1, 2].map((item) => (
