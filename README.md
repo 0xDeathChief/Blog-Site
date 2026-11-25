@@ -1,142 +1,264 @@
-# CipherBrief
+<div align="center">
+  <img src="public/branding/madquill-icon.png" width="110" alt="MadQuill emblem" />
+  <h1>MadQuill</h1>
+  <p><strong>Knowledge for a safer digital world.</strong></p>
+  <p>An independent, community-driven publishing platform for cybersecurity, technology and research.</p>
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-101C26?style=flat-square&logo=nextdotjs&logoColor=white" />
+  <img alt="React" src="https://img.shields.io/badge/React-101C26?style=flat-square&logo=react&logoColor=61DAFB" />
+  <img alt="JavaScript" src="https://img.shields.io/badge/JavaScript-101C26?style=flat-square&logo=javascript" />
+  <img alt="Supabase" src="https://img.shields.io/badge/Supabase-101C26?style=flat-square&logo=supabase" />
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-101C26?style=flat-square&logo=postgresql&logoColor=white" />
+  <img alt="Vercel" src="https://img.shields.io/badge/Vercel-101C26?style=flat-square&logo=vercel" />
+  <br/><br/>
+  <a href="#features">Features</a> · <a href="#architecture">Architecture</a> · <a href="#getting-started">Getting started</a> · <a href="#deployment">Deployment</a> · <a href="#contributors">Contributors</a>
+</div>
 
-A cybersecurity publication and learning-community project, built with the Next.js App Router.
+---
 
-## Stack
+## Overview
 
-- JavaScript and JSX; server components by default, client components only for interactive navigation.
-- Tailwind CSS 4, DaisyUI, and Lucide React.
-- Supabase PostgreSQL, Authentication, and Storage through `@supabase/ssr`.
-- Zod for validating configuration and future user input.
-- Ollama through a server-only, model-configurable assistant endpoint.
-- Tiptap provides rich article editing, syntax-highlighted code, tables, images, and Markdown import/export.
-- Zod validates article metadata and the server sanitizes the Tiptap document before saving.
+MadQuill is a full-stack technical publication that brings readers, technical writers and editorial teams together. It is designed for students, developers, security practitioners and curious learners who want to discover reliable technical content and share practical knowledge responsibly.
 
-## Project structure and documentation
+The project evolved from an initial blogging application into a database-backed publishing platform with controlled editorial workflows, community engagement, role-based access and a custom reading experience. Its engineering priorities are maintainability, usability, responsible security education and separation of public and privileged operations.
 
-Page and API entry points live in `src/app`; reusable UI is grouped by domain in `src/components`; server-side data access and business logic live in `src/lib`. Shared layout UI is under `src/components/layout`, while public discovery UI is under `src/components/public`. Routes remain at their existing URLs; unused scaffold folders are intentionally omitted.
+## Interface preview
 
-- [Architecture](./docs/ARCHITECTURE.md)
-- [Database and migrations](./docs/DATABASE.md)
-- [Roles and permissions](./docs/RBAC.md)
-- [AI setup](./docs/AI_SETUP.md)
-- [Security architecture](./docs/SECURITY.md)
-- [Development guide](./docs/DEVELOPMENT.md)
-- [API reference](./docs/API.md)
-- [Testing checklist](./docs/TESTING.md)
+![MadQuill learning section](docs/readme/learning-section.png)
 
-## Run locally
+*MadQuill-branded interface during development, before the final spacing refinements.*
+
+<details>
+<summary>Earlier homepage design — development history</summary>
+
+![Earlier homepage](docs/readme/original-homepage.png)
+
+*The original CipherBrief-branded homepage before the MadQuill rebrand. This is a historical screenshot, not the current production interface.*
+
+</details>
+
+## Features
+
+| Area | Capabilities |
+| :--- | :--- |
+| Content discovery | Search, featured and trending stories, categories, tags and author directories |
+| Reading | Dedicated article pages, structured technical content, code and media presentation, reading preferences and focus-oriented controls |
+| Community | Likes, comments, bookmarks, reading history and supported guest interactions |
+| Contributor workspace | Article creation, drafts, cover images, editing, submission and status tracking |
+| Editorial workflow | Review, revision, approval and authorized publication |
+| Administration | Comment moderation, featured content, contributor management and platform settings |
+| Accounts | Registration, sign-in, password recovery, profiles and protected account routes |
+| Interface | Responsive navigation, light/dark themes, liquid glass cards, digital rain and subtle motion |
+| Discoverability | Page metadata, Open Graph imagery, sitemap and robots configuration |
+
+## Architecture
+
+The Next.js App Router combines public pages, authenticated workspaces and server-side route handlers. Supabase provides authentication, PostgreSQL and storage; Cloudflare Turnstile supports verified guest interactions. The application uses dynamic server rendering for data-dependent routes and static rendering where appropriate.
+
+```mermaid
+flowchart TD
+    R[Readers and guests] --> UI[MadQuill interface]
+    C[Contributors and editorial team] --> UI
+    UI --> N[Next.js App Router]
+    N --> P[Public content and discovery]
+    N --> W[Protected workspaces]
+    N --> A[Server-side route handlers]
+    W --> A
+    A --> Z[Authorization and validation]
+    N --> S[Supabase Auth]
+    Z --> D[(PostgreSQL and RLS)]
+    P --> D
+    Z --> M[Supabase Storage]
+    Z --> T[Cloudflare Turnstile verification]
+```
+
+### Editorial lifecycle
+
+```mermaid
+flowchart LR
+    A[Create draft] --> B[Submit for review]
+    B --> C{Editorial decision}
+    C -->|Revise| D[Update draft]
+    D --> B
+    C -->|Approve| E[Authorized publication]
+    E --> F[Public article]
+    F --> G[Community engagement]
+```
+
+### Access model
+
+| Role | Intended responsibilities |
+| :--- | :--- |
+| Guest | Browse published content and use supported verified interactions |
+| Reader | Manage personal reading activity and participate in discussions |
+| Contributor | Create and manage drafts; submit articles for review |
+| Editor | Review content and perform permitted editorial actions |
+| Administrator / owner | Perform authorized platform, moderation and publishing operations |
+
+Actual privileges depend on server-side authorization and database policies, not merely interface visibility.
+
+## Technology stack
+
+| Layer | Technology |
+| :--- | :--- |
+| Application | Next.js, React, JavaScript |
+| Styling | Custom CSS, responsive design and motion effects |
+| Runtime | Node.js, npm |
+| Data | Supabase, PostgreSQL, SQL migrations |
+| Identity and media | Supabase Auth and Storage |
+| Abuse mitigation | Cloudflare Turnstile and signed interaction cookies |
+| Quality and delivery | ESLint, Git, GitHub, Vercel (deployment target) |
+
+## Security and privacy
+
+MadQuill is designed with layered security controls rather than relying solely on client-side access restrictions.
+
+- Server-side authorization for protected operations and separation of reader, contributor and administrative responsibilities.
+- Database Row-Level Security (RLS) policies and controlled access to application resources.
+- Supabase session management and password recovery workflows.
+- Turnstile verification and signed interaction cookies for supported guest actions.
+- Controlled article media handling and editorial moderation.
+- Separation of public configuration from private server credentials.
+- Dependency auditing and production build validation.
+
+These controls require correct deployment configuration and ongoing testing. A successful build or dependency audit does not constitute a complete security audit. See [security documentation](docs/SECURITY.md) and [community documentation](docs/DISCOVERY-COMMUNITY.md).
+
+## Repository structure
+
+```text
+Blog-Site/
+├── public/branding/       # MadQuill logo and emblem
+├── src/
+│   ├── app/               # App Router pages, API routes and metadata
+│   ├── components/        # Public UI, article editor, auth and portals
+│   ├── lib/               # Content, authorization, SEO and backend helpers
+│   └── proxy.js           # Request-level application integration
+├── supabase/migrations/   # Versioned database changes
+├── scripts/               # Local preview tooling
+├── docs/                  # Security, community and README assets
+├── .env.example           # Environment configuration template
+├── next.config.mjs
+├── package.json
+└── README.md
+```
+
+## Getting started
+
+### Requirements
+
+A Node.js version compatible with the repository's dependencies, npm, Git, a Supabase project and a Turnstile configuration for verified guest interactions.
+
+```bash
+git clone https://github.com/0xDeathChief/Blog-Site.git
+cd Blog-Site
+npm ci
+```
+
+Copy `.env.example` to `.env.local` (PowerShell):
 
 ```powershell
-npm install
 Copy-Item .env.example .env.local
+```
+
+On Linux or macOS, use `cp .env.example .env.local`.
+
+### Environment configuration
+
+Fill in the template with your own project configuration. Never commit real secrets.
+
+| Variable | Purpose | Scope |
+| :--- | :--- | :--- |
+| `NEXT_PUBLIC_SITE_URL` | Local or deployed base URL | Public |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | Publication contact address | Public |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Public |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Client publishable key | Public |
+| `SUPABASE_SECRET_KEY` | Privileged server credential | Private |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Turnstile widget key | Public |
+| `TURNSTILE_SECRET_KEY` | Server verification credential | Private |
+| `CB_INTERACTION_SECRET` | Independent interaction signing secret | Private |
+| `APP_MODE` | Application runtime mode; follow repository configuration | Server |
+
+`NODE_ENV` is normally managed by the framework. Generate an independent signing secret locally using:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+### Backend setup
+
+1. Configure the Supabase project and required authentication settings.
+2. Review and apply pending migrations in `supabase/migrations/` in chronological order, including the community publishing and discovery migrations.
+3. Configure storage and access policies; verify RLS and assign administrative roles through authorized operations.
+4. Set the appropriate authentication redirect URLs and Turnstile hostnames.
+
+Do not reset an existing database or blindly reapply migrations. Keep private keys outside version control.
+
+```bash
 npm run dev
 ```
 
-Open http://localhost:3000. The public homepage works without external credentials. Supabase or Ollama calls require the corresponding values in `.env.local`.
-Set `NEXT_PUBLIC_SITE_URL` to the canonical production origin before deployment; it defaults to `http://localhost:3000` for local work.
+Open [http://localhost:3000](http://localhost:3000). See [LOCAL-PREVIEW.md](LOCAL-PREVIEW.md) for additional preview instructions.
 
-## Supabase and RBAC setup
+### Development checks
 
-1. Create a Supabase project and configure its Auth email/invite provider.
-2. Apply all migrations in timestamp order using the Supabase SQL Editor or your Supabase migration workflow:
-   - [`20261124170000_roles_and_editorial_workflow.sql`](./supabase/migrations/20261124170000_roles_and_editorial_workflow.sql)
-   - [`20261124233000_article_management.sql`](./supabase/migrations/20261124233000_article_management.sql)
-   - [`20261125010000_community_pages.sql`](./supabase/migrations/20261125010000_community_pages.sql)
-   - [`20261125020000_normalized_community_schema.sql`](./supabase/migrations/20261125020000_normalized_community_schema.sql)
-   - [`20261125030000_search_discovery.sql`](./supabase/migrations/20261125030000_search_discovery.sql)
-3. Copy the project URL, publishable key, and service-role key into `.env.local`. The service-role key is server-only and must never use a `NEXT_PUBLIC_` prefix.
-4. Create the first account in Supabase Auth. In the SQL Editor, promote that account exactly once using its Auth user UUID:
-
-   ```sql
-   update public.profiles
-   set role = 'owner'
-   where id = 'YOUR_AUTH_USER_UUID'::uuid
-     and role = 'reader'
-     and status = 'active';
-   ```
-
-   Confirm that exactly one row changed. After bootstrap, use the owner-only account API to invite and manage users.
-
-The migrations create the four roles, article workflow, review/revision history, audit records, settings, seeded starter categories/tags, and the cover-image bucket. The final migration normalizes profile, article, review, comment, engagement, AI-message, translation, and audit fields while preserving existing records. It enables RLS, prevents users from changing their own role, restricts role updates to an owner-checked function, and limits article state transitions and snapshots to guarded database functions. The API verifies sessions and roles on the server, checks request origin for mutations, validates cover-image content, and sanitizes article documents before saving. Migration order and table relationships are described in [DATABASE.md](./docs/DATABASE.md).
-
-The search migration adds a PostgreSQL full-text index and a public-only search function. It searches article text and topic/tag names, applies filters and popularity sorting in the database, and returns bounded pages so unpublished articles are not exposed.
-
-### Database relationships
-
-```mermaid
-erDiagram
-  profiles ||--o{ articles : authors
-  categories ||--o{ articles : classifies
-  articles ||--o{ article_tags : has
-  tags ||--o{ article_tags : labels
-  articles ||--o{ article_reviews : receives
-  profiles o|--o{ article_reviews : reviews
-  articles ||--o{ article_revisions : snapshots
-  profiles o|--o{ article_revisions : edits
-  articles ||--o{ comments : receives
-  profiles o|--o{ comments : writes
-  comments o|--o{ comments : replies
-  profiles ||--o{ bookmarks : saves
-  articles ||--o{ bookmarks : saved_by
-  profiles ||--o{ likes : gives
-  articles ||--o{ likes : liked_by
-  profiles ||--o{ ai_conversations : owns
-  ai_conversations ||--o{ ai_messages : contains
-  articles ||--o{ article_translations : translated_as
-  profiles o|--o{ audit_logs : performs
+```bash
+npm run lint
+npm run build
+npm audit
 ```
 
-- A profile can author many articles; each article has one optional category. Deleting a category keeps its articles and clears their category reference.
-- `article_tags` is the join table that lets one article have many tags and one tag label many articles. Its two foreign keys prevent dangling links.
-- Reviews and revisions belong to an article. A review records the reviewer, decision/feedback, and date; a revision stores a numbered content snapshot and editor.
-- Comments belong to an article and may point to a parent comment for replies. Bookmarks and likes connect readers to articles; unique user/article constraints prevent duplicates.
-- A conversation belongs to one user and contains separate messages. Article translations are stored independently by article, language, and style, so translated text never overwrites the original.
-- Audit logs identify the acting profile when available. `entity_id` is intentionally polymorphic (it may identify a user, article, or another entity), so it is not a foreign key to one specific table.
+## Deployment
 
-## Article workflow
+MadQuill targets Vercel as a dynamic Next.js application, not a static-only export.
 
-1. Sign in at `/sign-in`. Accounts are owner-invited; `/register` explains why public self-registration is disabled. Password recovery is available at `/forgot-password`.
-2. Contributors and owners can draft at `/dashboard/articles`. The editor supports headings, formatting, lists, links, HTTPS images, tables, Markdown import/export, and syntax-highlighted code blocks.
-3. Save a draft, then submit it for review. Editors can start review, request revisions, reject, or approve. Only an owner can publish or unpublish.
-4. Published articles appear on the home page and at `/articles/:slug`. Reading time is calculated from article text when the server saves it.
+```mermaid
+flowchart LR
+    L[Local development] --> G[GitHub main branch]
+    G --> V[Vercel Next.js runtime]
+    U[Visitors] --> V
+    V --> S[Supabase Auth / Database / Storage]
+    V --> T[Cloudflare Turnstile]
+```
 
-Article revisions keep the previous content and metadata, including category, difficulty, cover path, and tagged values. Workflow events record the actor/reviewer, timestamp, and status before and after each transition. Editorial feedback is shown with its reviewer and date. Article edits and transitions are restricted by both server authorization and database functions/RLS; changing or hiding a button does not grant permission.
+Import the repository in Vercel, select Next.js, leave framework build/output defaults and configure the production environment variables. Set the real deployment URL in `NEXT_PUBLIC_SITE_URL`, configure Supabase redirects and Turnstile hostnames, and verify pending database migrations before launch.
 
-Account administration is available at `GET`/`POST /api/admin/users` and `PATCH`/`DELETE /api/admin/users/:userId`.
+### Release verification
 
-## Website pages and workspaces
+- [x] Local production build passed during final polishing.
+- [x] Dependency audit reported zero known vulnerabilities at that validation stage.
+- [ ] Verify production registration, sign-in and password recovery.
+- [ ] Verify database policies, editorial permissions and guest interaction protection.
+- [ ] Verify publishing, comments, media, search and responsive layouts on the deployed site.
+- [ ] Confirm production metadata and social sharing.
 
-- Public pages: `/articles`, `/categories`, `/tags`, `/authors`, `/authors/:authorId`, `/search`, `/about`, `/contact`, `/privacy`, and `/terms`. Article directories and search include only published content. Public author data is returned by a restricted database function rather than exposing profile records.
-- Contributor workspace: `/dashboard` and `/dashboard/{articles,drafts,submitted,feedback,published,profile}`; article creation/editing remains at `/dashboard/articles/new` and `/dashboard/articles/:articleId`.
-- Editor workspace: `/editor` and `/editor/{pending-reviews,under-review,revision-requests,review-history,contributor-articles}`.
-- Owner workspace: `/admin` and `/admin/{analytics,users,roles,articles,reviews,categories,tags,featured,ai-settings,website-settings,audit-logs}`. Sensitive pages and mutations check the owner role on the server and use the database's owner policies/functions.
-- Reader workspace: `/profile`, `/bookmarks`, `/likes`, `/comments`, `/ai-conversations`, and `/reading-history`. Bookmarks, likes, comments, and reading history are stored per account under RLS. AI conversations are private, bounded records; clearing a conversation deletes its saved copy.
+Production deployment and end-to-end verification are not asserted by this README.
 
-Password reset links exchange their Supabase recovery code at `/auth/callback` before allowing a new password. The site owner can configure public site metadata and a contact email in the admin settings. Until a public contact email is configured, the contact page explains that no address is available.
+## Development journey
 
-## SEO and performance
+The project began with a foundational blogging website and expanded through iterative development into MadQuill. Subsequent work introduced structured publishing, community functionality, backend and security improvements, a new editorial design system, custom branding, responsive layout refinements and production preparation.
 
-Public pages use canonical URLs, dynamic article/category/tag/author metadata, Open Graph and Twitter cards, and `TechArticle` JSON-LD on published articles. The generated social preview is `/opengraph-image`; public sitemap and crawler rules are available at `/sitemap.xml` and `/robots.txt`. Search results and filtered listing URLs are excluded from indexing, and the sitemap contains only public pages and published articles.
+## Contributors
 
-Published article data and discovery results are cached for five minutes; topic directories use ten minutes, and sitemap data uses one hour. Public-content updates invalidate the tagged caches. Public cover images use Next.js image optimization with the configured Supabase Storage host; card images remain lazy-loaded while featured/article hero images load eagerly.
+| Contributor | Areas of contribution |
+| :--- | :--- |
+| **[Takbir Rahman](https://github.com/kaal001)** | Led subsequent platform development and feature expansion, full-stack integration, database and authorization improvements, community and editorial workflows, security controls, UI/UX engineering, branding and deployment preparation. |
+| **Azmain** | Established the initial blogging application structure and foundational implementation, providing the starting point for the platform's subsequent evolution. |
 
-## Learning assistant setup
+Both contributors helped shape the project through complementary stages of development.
 
-1. Install Ollama and pull a model supported by your machine.
-2. Set `OLLAMA_BASE_URL` and `OLLAMA_MODEL` in `.env.local`; the model URL and name are read only on the server.
-3. Configure Supabase and apply the migrations above. The assistant uses the server-only service-role key and the database `consume_rate_limit` function to enforce request limits.
-4. Open `/learning-assistant` for general questions, commands, code, study notes, quizzes, and learning roadmaps. Published article pages include article questions, summaries, and selected-text actions.
-5. Requests are same-origin checked, validated and size-limited. Assistant requests are limited to 20 per authenticated user or 10 per IP per five minutes; translation requests have separate limits of 12 and 6. Article-question context is selected on the server; selection actions send only the chosen passage. Longer articles (up to 96,000 extracted characters) are summarized in bounded sections. The assistant prompt is restricted to defensive education and offline, synthetic practice.
+## Contributing and responsible use
 
-The assistant requires both a working Ollama model and configured Supabase credentials. It does not expose a provider secret or let the browser choose the model.
+Focused improvements and constructive feedback are welcome subject to repository access and maintainer approval. Use a dedicated branch, preserve authorization and database controls, run lint/build checks and document meaningful changes before submitting a pull request.
 
-## Translation
+MadQuill supports educational research and ethical cybersecurity learning. Security techniques should be practiced only in authorized environments. Report suspected vulnerabilities privately to the maintainers rather than publishing sensitive details.
 
-Published article readers can translate a full article or selected text into English or Bangla. Bangla styles include simple, professional, and Bangla with English technical terms. AI responses can also be translated from their message controls. Full-article translations are saved separately by article, language, and style and reused on later requests; editing an article clears those cached translations. Selected passages and AI responses are generated on demand. No translation replaces or updates the original article.
+## License
 
-Article translation rebuilds only text nodes in the existing Tiptap document, preserving headings, lists, tables, links, and other formatting. Code blocks and inline code remain unchanged; URLs, command flags, and parameter-like values are protected. Translation requests use the same local Ollama model and server-side rate limits as the assistant.
+No license is granted by this README. Refer to any license included in the repository or obtain permission from the maintainers before reuse or redistribution. Third-party dependencies retain their respective licenses.
 
-## Operational verification
+---
 
-The public pages, role-specific workspace pages, editorial workflow, account administration, category/tag management, reader engagement, password recovery, AI assistant, and translation flows are implemented. The migrations have not been applied to a live Supabase project here; SQL execution, RLS behavior, storage policies, rate limiting, Auth email callbacks, and Ollama connectivity must be validated in a development project before production use.
+<div align="center">
+  <img src="public/branding/madquill-icon.png" width="44" alt="MadQuill" />
+  <p><strong>MadQuill</strong><br/>Explore knowledge. Share insights. Build a safer digital world.</p>
+  <sub>Developed by Takbir Rahman and Azmain.</sub>
+</div>
