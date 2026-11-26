@@ -1,4 +1,4 @@
-import Image from "next/image";
+import ResponsiveArticleImage from "@/components/media/ResponsiveArticleImage";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 
@@ -13,9 +13,9 @@ export default function ArticleCards({ articles, emptyMessage = "No published ar
         <Link className="article-card" href={`/articles/${article.slug}`} key={article.id}>
           <div className="article-art violet">
             {article.coverUrl
-              ? <Image
+              ? <ResponsiveArticleImage
                 className="article-cover"
-                src={article.coverUrl} unoptimized
+                src={article.coverUrl} maxWidth={1200}
                 alt=""
                 width={720}
                 height={360}

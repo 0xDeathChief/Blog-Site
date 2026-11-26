@@ -14,8 +14,14 @@ export async function createSupabaseServerClient() {
         return cookieStore.getAll();
       },
       setAll(cookiesToSet) {
-        for (const { name, value, options } of cookiesToSet) {
-          cookieStore.set(name, value, options);
+        try {
+          for (const { name, value, options } of cookiesToSet) {
+            cookieStore.set(name, value, options);
+          }
+        } catch (error) {
+          // Server Components cannot write response cookies. Proxy refreshes
+          // the session before rendering; Route Handlers can still write.
+          if (!(error instanceof Error) || !error.message.includes("Cookies can only be modified")) throw error;
         }
       },
     },

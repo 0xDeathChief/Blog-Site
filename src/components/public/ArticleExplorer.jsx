@@ -1,7 +1,7 @@
 "use client";
 import {useRouter} from "next/navigation";
 import { ArrowRight, Search, ShieldCheck } from "lucide-react";
-import Image from "next/image";
+import ResponsiveArticleImage from "@/components/media/ResponsiveArticleImage";
 import Link from "next/link";
 
 export default function ArticleExplorer({ articles }) {
@@ -36,9 +36,9 @@ export default function ArticleExplorer({ articles }) {
               <Link className="article-card" href={`/articles/${article.slug}`} key={article.slug}>
                 <div className={`article-art ${article.accent}`}>
                   {article.coverUrl ? (
-                    <Image
+                    <ResponsiveArticleImage
                       className="article-cover"
-                      src={article.coverUrl} unoptimized
+                      src={article.coverUrl} maxWidth={1200}
                       alt=""
                       width={720}
                       height={360}

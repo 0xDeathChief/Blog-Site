@@ -21,7 +21,7 @@ export default function OpenGraphImage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "18px", color: "#b8f34a", fontSize: 24, fontWeight: 700, letterSpacing: 4 }}>
-          <div style={{ width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #b8f34a", borderRadius: 10 }}>C</div>
+          <div style={{ width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #b8f34a", borderRadius: 10 }}>M</div>
           MADQUILL
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>

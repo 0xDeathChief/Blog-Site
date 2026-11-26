@@ -10,7 +10,7 @@ export default async function SignInPage({ searchParams }) {
   return (
     <main className="auth-page">
       <Link className="brand auth-brand" href="/">
-        <span className="brand-mark"><img src="/branding/madquill-icon.png" alt="" width={36} height={36} /></span>
+        <span className="brand-mark"><img src="/branding/madquill-icon-v2.webp" alt="" width={36} height={36} /></span>
         <span>Mad<span>Quill</span></span>
       </Link>
       <div className="cb-auth-theme"><ThemeToggle /></div>

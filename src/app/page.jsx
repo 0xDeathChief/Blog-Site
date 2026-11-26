@@ -7,13 +7,14 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import Image from "next/image";
+import ResponsiveArticleImage from "@/components/media/ResponsiveArticleImage";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import ArticleExplorer from "@/components/public/ArticleExplorer";
 import SiteHeader from "@/components/layout/SiteHeader";
 import { getPublicAuthors, getPublicCategories, getPublishedArticlePage } from "@/lib/articles/public";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
+import { getSiteUrl } from "@/lib/seo/site";
 
 export const revalidate = 60;
 export const metadata = { alternates: { canonical: "/" } };
@@ -32,6 +33,13 @@ export default async function Home() {
 
   return (
     <main>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@graph": [
+          { "@type": "Organization", "@id": new URL("/#organization", getSiteUrl()).toString(), name: "MadQuill", url: getSiteUrl().toString(), logo: new URL("/branding/madquill-icon.png", getSiteUrl()).toString() },
+          { "@type": "WebSite", "@id": new URL("/#website", getSiteUrl()).toString(), name: "MadQuill", url: getSiteUrl().toString(), publisher: { "@id": new URL("/#organization", getSiteUrl()).toString() }, inLanguage: "en" },
+        ],
+      }).replace(/</g, "\\u003c") }} />
       <SiteHeader />
 
       <section className="hero home-hero">
@@ -57,12 +65,12 @@ export default async function Home() {
             </div>
             <div className="featured-visual">
               {featuredArticle?.coverUrl ? (
-                <Image
+                <ResponsiveArticleImage
                   className="featured-cover"
-                  src={featuredArticle.coverUrl} unoptimized
+                  src={featuredArticle.coverUrl} maxWidth={1920}
                   alt=""
                   fill
-                  sizes="(max-width: 900px) 100vw, 55vw"
+                  sizes="(max-width: 900px) calc(100vw - 48px), (max-width: 1400px) 48vw, 660px"
                   priority
                 />
               ) : (
@@ -109,20 +117,20 @@ export default async function Home() {
               <h2 id="popular-heading">Trending stories</h2>
               <p>Stories with the most reader engagement in the past 30 days.</p>
             </div>
-            <Link className="all-articles-link" href="/articles">Explore the archive <ArrowRight size={15} /></Link>
+            <Link className="all-articles-link" href="/trending">View all trending stories <ArrowRight size={15} /></Link>
           </div>
           {popularArticles.length ? (
             <div className="popular-article-list">
-              {popularArticles.map((article, index) => (
+              {popularArticles.map((article) => (
                 <Link className="popular-article-row" href={`/articles/${article.slug}`} key={article.id}>
-                  <span className="popular-rank">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="mq-trending-symbol" aria-hidden="true"><Sparkles size={20} /></span>
                   <span className="popular-article-copy">
                     <span className="home-topic-label">{article.category}</span>
                     <strong>{article.title}</strong>
                     <span className="popular-article-summary">{article.summary}</span>
                   </span>
                   <span className="popular-article-meta">
-                    <span>{article.view_count ?? 0} views · {article.comment_count ?? 0} comments · {article.likeCount} likes</span>
+                    <span>{article.view_count ?? 0} views · {article.comment_count ?? 0} comments · {article.likeCount ?? 0} {(article.likeCount ?? 0) === 1 ? "like" : "likes"}</span>
                     <span>{article.reading_time_minutes} min read</span>
                   </span>
                   <ArrowRight className="popular-arrow" size={18} />
@@ -155,7 +163,7 @@ export default async function Home() {
               {featuredCategories.map((category, index) => (
                 <Link className={`home-topic-card topic-tone-${index % 4}`} href={`/categories/${category.slug}`} key={category.id}>
                   <span className="home-topic-icon"><Compass size={18} /></span>
-                  <span className="home-topic-label">TOPIC {String(index + 1).padStart(2, "0")}</span>
+                  <span className="home-topic-label">EXPLORE TOPIC</span>
                   <strong>{category.name}</strong>
                   <span className="home-topic-count">{category.articleCount} {category.articleCount === 1 ? "article" : "articles"} <ArrowRight size={14} /></span>
                 </Link>
@@ -180,15 +188,15 @@ export default async function Home() {
           </div>
           <div className="home-beginner-steps">
             <article>
-              <span>01</span>
+              <span aria-hidden="true"><Compass size={18} /></span>
               <div><h3>Start with the foundations</h3><p>Explore core concepts and understand the vocabulary behind security.</p></div>
             </article>
             <article>
-              <span>02</span>
+              <span aria-hidden="true"><FileCheck2 size={18} /></span>
               <div><h3>Learn through examples</h3><p>Read approachable tutorials with commands, code, and practical context.</p></div>
             </article>
             <article>
-              <span>03</span>
+              <span aria-hidden="true"><ShieldCheck size={18} /></span>
               <div><h3>Practice responsibly</h3><p>Build skills in authorized labs and focus on strengthening defenses.</p></div>
             </article>
           </div>
@@ -252,19 +260,16 @@ export default async function Home() {
           </div>
           <div className="workflow">
             <article className="workflow-step">
-              <span className="step-number">01</span>
               <div className="workflow-icon"><Users size={20} /></div>
               <h3>Contribute</h3>
               <p>Share a practical, well-sourced article with the community.</p>
             </article>
             <article className="workflow-step">
-              <span className="step-number">02</span>
               <div className="workflow-icon"><FileCheck2 size={20} /></div>
               <h3>Editorial review</h3>
               <p>Editors review accuracy, clarity, safety, and usefulness for learners.</p>
             </article>
             <article className="workflow-step">
-              <span className="step-number">03</span>
               <div className="workflow-icon"><ShieldCheck size={20} /></div>
               <h3>Publish together</h3>
               <p>Approved work is published with attribution and room to improve.</p>
@@ -280,7 +285,7 @@ export default async function Home() {
       <footer className="site-footer home-footer">
         <div className="shell footer-content">
           <Link className="brand" href="/" aria-label="MadQuill home">
-            <span className="brand-mark"><img src="/branding/madquill-icon.png" alt="" width={36} height={36} /></span>
+            <span className="brand-mark"><img src="/branding/madquill-icon-v2.webp" alt="" width={36} height={36} /></span>
             <span>Mad<span>Quill</span></span>
           </Link>
           <p>Clear security knowledge. Shared responsibly.</p>

@@ -14,14 +14,15 @@ export default function SiteHeader() {
     <header className="site-header">
       <div className="shell nav-wrap">
         <Link className="brand" href="/" aria-label="MadQuill home">
-          <span className="brand-mark"><img src="/branding/madquill-icon.png" alt="" width={36} height={36} /></span>
+          <span className="brand-mark"><img src="/branding/madquill-icon-v2.webp" alt="" width={50} height={50} /></span>
           <span>Mad<span>Quill</span></span>
         </Link>
         <nav className={menuOpen ? "nav-links open" : "nav-links"} aria-label="Main navigation">
           <Link href="/" aria-current={pathname === "/" ? "page" : undefined} onClick={() => setMenuOpen(false)}>Home</Link>
           <Link href="/articles" aria-current={pathname === "/articles" ? "page" : undefined} onClick={() => setMenuOpen(false)}>Discover</Link>
           <Link href="/categories" aria-current={pathname.startsWith("/categories") ? "page" : undefined} onClick={() => setMenuOpen(false)}>Topics</Link>
-          <Link href="/articles?sort=popularity" onClick={() => setMenuOpen(false)}>Trending</Link>
+          <Link href="/trending" aria-current={pathname === "/trending" ? "page" : undefined} onClick={() => setMenuOpen(false)}>Trending</Link>
+          <Link href="/contact" aria-current={pathname === "/contact" ? "page" : undefined} onClick={() => setMenuOpen(false)}>Contact</Link>
           <Link className="cb-mobile-write" href="/dashboard/articles/new" onClick={() => setMenuOpen(false)}>Write a story</Link>
           <Link className="mobile-contributor-link" href="/sign-in" onClick={() => setMenuOpen(false)}>Contributor sign in</Link>
         </nav>

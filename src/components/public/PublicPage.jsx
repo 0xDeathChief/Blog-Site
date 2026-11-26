@@ -18,7 +18,7 @@ export default function PublicPage({ kicker, title, description, children }) {
       <footer className="site-footer">
         <div className="shell footer-content">
           <Link className="brand" href="/">
-            <span className="brand-mark"><img src="/branding/madquill-icon.png" alt="" width={36} height={36} /></span>
+            <span className="brand-mark"><img src="/branding/madquill-icon-v2.webp" alt="" width={36} height={36} /></span>
             <span>Mad<span>Quill</span></span>
           </Link>
           <p>Clear security knowledge. Shared responsibly.</p>

@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 import sharp from "sharp";
+import { mediaMode, storeVariants } from "@/lib/media/variants.mjs";
 export const runtime="nodejs";
-import { NextResponse } from "next/server";
+export const maxDuration = 60;
+import { after, NextResponse } from "next/server";
 import { requireRoleApi } from "@/lib/auth/api";
 import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -99,5 +101,18 @@ export async function POST(request) {
     return NextResponse.json({ error: "Unable to upload the cover image." }, { status: 502 });
   }
 
+  // The original upload is authoritative. Variant generation must never
+  // invalidate a successful upload, or publish a draft's bytes.
+  if (mediaMode() !== "legacy") {
+    const sourceType = file.type;
+    // Keep the upload response fast. Next.js retains the route lifecycle for
+    // this best-effort task; fallback/backfill handle interrupted generation.
+    after(async () => {
+      try {
+        const result = await storeVariants(admin, bytes, path, sourceType);
+        if (result.failed) console.warn("[MadQuill media] Some upload variants unavailable", result.failed);
+      } catch { console.warn("[MadQuill media] Variant generation unavailable; master retained"); }
+    });
+  }
   return NextResponse.json({ path, url: `/api/article-media/${path}`,originalBytes:bytes.length,storedBytes:output.length }, { status: 201 });
 }

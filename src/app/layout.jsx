@@ -21,18 +21,18 @@ const defaultMetadata = {
 
 export async function generateMetadata() {
   const settings = await getPublicSiteMetadata();
-  const title = settings.site_title || defaultMetadata.title;
-  const description = settings.site_description || defaultMetadata.description;
+  const title = (settings.site_title || defaultMetadata.title).replace(/cipher\s*brief/gi, "MadQuill");
+  const description = (settings.site_description || defaultMetadata.description).replace(/cipher\s*brief/gi, "MadQuill");
   const image = "/opengraph-image";
 
   return {
     metadataBase: getSiteUrl(),
     title,
     description,
-    applicationName: title,
+    applicationName: "MadQuill",
     openGraph: {
       type: "website",
-      siteName: title,
+      siteName: "MadQuill",
       title,
       description,
       images: [{ url: image, width: 1200, height: 630, alt: `${title} publication cover` }],
@@ -58,6 +58,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >

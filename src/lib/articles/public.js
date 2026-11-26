@@ -101,11 +101,14 @@ const loadPublishedArticleBySlug = cache(async (slug) => {
   if (error) throw new Error("Unable to load this published article.", { cause: error });
   if (!article) return null;
 
-  const { data: authors, error: authorError } = await supabase.rpc(
-    "get_published_article_authors",
-    { article_ids: [article.id] },
-  );
-  if (authorError) throw new Error("Unable to load the article author.", { cause: authorError });
+  let authors = [];
+  try {
+    const result = await supabase.rpc("get_published_article_authors", { article_ids: [article.id] });
+    if (result.error) throw result.error;
+    authors = result.data ?? [];
+  } catch (error) {
+    console.warn("[MadQuill article] Optional author lookup unavailable", error?.code ?? error?.name ?? "unknown");
+  }
 
   return {
     article,
@@ -206,7 +209,7 @@ const loadPublicArticleSitemapEntries = unstable_cache(async () => {
   for (let offset = 0; ; offset += batchSize) {
     const { data, error } = await supabase
       .from("articles")
-      .select("slug, published_at, updated_at")
+      .select("slug, published_at, updated_at, cover_image")
       .eq("status", "published")
       .order("published_at", { ascending: false })
       .range(offset, offset + batchSize - 1);
@@ -219,7 +222,7 @@ const loadPublicArticleSitemapEntries = unstable_cache(async () => {
   }
 
   return entries;
-}, ["public-article-sitemap-v1"], {
+}, ["public-article-sitemap-v2"], {
   revalidate: 3600,
   tags: ["published-content"],
 });

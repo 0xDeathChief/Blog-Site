@@ -1,4 +1,4 @@
-import Image from "next/image";
+import ResponsiveArticleImage from "@/components/media/ResponsiveArticleImage";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import SiteHeader from "@/components/layout/SiteHeader";
@@ -19,7 +19,7 @@ export async function generateMetadata({ params }) {
   const { article, authorName, coverUrl } = articleData;
   const description = toMetaDescription(article.excerpt);
   const canonical = `/articles/${article.slug}`;
-  const image = coverUrl || "/opengraph-image";
+  const image = new URL(coverUrl ? `${coverUrl}?preview=1` : "/opengraph-image", getSiteUrl()).toString();
 
   return {
     title: `${article.title} — MadQuill`,
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }) {
       authors: [authorName],
       section: article.categories?.name ?? "Cybersecurity",
       tags: (article.article_tags ?? []).map(({ tags }) => tags?.name).filter(Boolean),
-      images: [{ url: image, width: 1200, height: 630, alt: article.title }],
+      images: [{ url: image, alt: article.title, ...(!coverUrl ? { width: 1200, height: 630 } : {}) }],
     },
     twitter: {
       card: "summary_large_image",
@@ -52,12 +52,12 @@ export default async function PublishedArticlePage({ params }) {
   if (!articleData) notFound();
   const { article, authorName, coverUrl } = articleData;
 
+  // Public reading must not depend on optional account or discussion services.
   const [commentsResult, principal, engagementResult] = await Promise.all([
-    loadComments(article.id),
-    getCurrentPrincipal(),
-    createSupabasePublicClient().from("cb_article_engagement").select("view_count,comment_count,like_count").eq("article_id",article.id).maybeSingle(),
+    optionalArticleData("comments", () => loadComments(article.id), { data: [] }),
+    optionalArticleData("session", () => getCurrentPrincipal(), null),
+    optionalArticleData("engagement", () => createSupabasePublicClient().from("cb_article_engagement").select("view_count,comment_count,like_count").eq("article_id",article.id).maybeSingle(), { data: {} }),
   ]);
-  // Comments and engagement are nonessential: allow reading during a temporary service failure.
 
   const tags = (article.article_tags ?? []).map(({ tags }) => tags).filter(Boolean);
   const articleUrl = new URL(`/articles/${article.slug}`, getSiteUrl()).toString();
@@ -66,18 +66,20 @@ export default async function PublishedArticlePage({ params }) {
     "@type": "TechArticle",
     headline: article.title,
     description: toMetaDescription(article.excerpt),
-    image: coverUrl ? [coverUrl] : [new URL("/opengraph-image", getSiteUrl()).toString()],
+    image: [new URL(coverUrl ? `${coverUrl}?preview=1` : "/opengraph-image", getSiteUrl()).toString()],
     datePublished: article.published_at,
     dateModified: article.updated_at || article.published_at,
     author: {
       "@type": "Person",
       name: authorName,
-      url: new URL(`/authors/${article.author_id}`, getSiteUrl()).toString(),
+      ...(article.author_id ? { url: new URL(`/authors/${article.author_id}`, getSiteUrl()).toString() } : {}),
     },
     publisher: {
       "@type": "Organization",
       name: "MadQuill",
+      "@id": new URL("/#organization", getSiteUrl()).toString(),
       url: getSiteUrl().toString(),
+      logo: { "@type": "ImageObject", url: new URL("/branding/madquill-icon.png", getSiteUrl()).toString() },
     },
     mainEntityOfPage: articleUrl,
     articleSection: article.categories?.name ?? "Cybersecurity",
@@ -98,12 +100,12 @@ export default async function PublishedArticlePage({ params }) {
           <ArticleLearningExperience
             cover={coverUrl && (
             <div className="published-article-cover">
-              <Image
-                src={coverUrl} unoptimized
+              <ResponsiveArticleImage
+                src={coverUrl} maxWidth={1920}
                 alt={`${article.title} cover`}
                 width={1280}
                 height={640}
-                sizes="(max-width: 760px) 100vw, 1280px"
+                sizes="(max-width: 760px) 100vw, 690px"
                 priority
               />
             </div>
@@ -136,6 +138,17 @@ export default async function PublishedArticlePage({ params }) {
   );
 }
 
+async function optionalArticleData(label, load, fallback) {
+  try {
+    const result = await load();
+    if (result?.error) throw result.error;
+    return result ?? fallback;
+  } catch (error) {
+    console.warn(`[MadQuill article] Optional ${label} unavailable`, error?.code ?? error?.name ?? "unknown");
+    return fallback;
+  }
+}
+
 async function loadComments(articleId) {
   const supabase = createSupabasePublicClient();
   return supabase
@@ -156,5 +169,6 @@ function toMetaDescription(value) {
 }
 
 function formatDate(value) {
-  return new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(new Date(value));
+  const date = new Date(value);
+  return value && Number.isFinite(date.getTime()) ? new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(date) : "";
 }

@@ -11,6 +11,7 @@ export const revalidate = 3600;
 const publicPages = [
   ["/", 1],
   ["/articles", 0.9],
+  ["/trending", 0.8],
   ["/categories", 0.7],
   ["/tags", 0.7],
   ["/authors", 0.7],
@@ -39,6 +40,8 @@ export default async function sitemap() {
       lastModified: article.updated_at || article.published_at,
       changeFrequency: "monthly",
       priority: 0.8,
+      ...((typeof article.cover_image === "string" && /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|avif)$/.test(article.cover_image))
+        ? { images: [new URL(`/api/article-media/${article.cover_image}?preview=1`, siteUrl).toString()] } : {}),
     })),
     ...categories.map((category) => ({
       url: new URL(`/categories/${encodeURIComponent(category.slug)}`, siteUrl).toString(),

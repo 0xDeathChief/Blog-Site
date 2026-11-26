@@ -7,11 +7,11 @@ export default function robots() {
   return {
     rules: [{
       userAgent: "*",
-      allow: "/",
+      allow: ["/", "/api/article-media/"],
       disallow: [
-        "/admin/",
-        "/dashboard/",
-        "/editor/",
+        "/admin",
+        "/dashboard",
+        "/editor",
         "/profile",
         "/bookmarks",
         "/likes",

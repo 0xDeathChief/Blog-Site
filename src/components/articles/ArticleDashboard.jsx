@@ -39,7 +39,7 @@ export default function ArticleDashboard({ role, displayName, articles }) {
       <div className="shell">
         <header className="management-header">
           <Link className="brand" href="/">
-            <span className="brand-mark"><img src="/branding/madquill-icon.png" alt="" width={36} height={36} /></span>
+            <span className="brand-mark"><img src="/branding/madquill-icon-v2.webp" alt="" width={36} height={36} /></span>
             <span>Mad<span>Quill</span></span>
           </Link>
           <div className="management-account">

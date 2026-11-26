@@ -13,13 +13,16 @@ export default function ArticleInteractions({articleId,articlePath,isReader,comm
  const [busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const canInteract=isReader||Boolean(guest);
  const endpoint=isReader?"/api/reader/activity":"/api/guest/activity";
- useEffect(()=>{let active=true;
-  fetch(`${endpoint}?articleId=${encodeURIComponent(articleId)}`,{cache:"no-store"}).then(async response=>{const result=await response.json();if(!response.ok)throw new Error(result.error||"Unable to load activity.");if(active){setLiked(Boolean(result.liked));setBookmarked(Boolean(result.bookmarked));setGuestAllowed(Boolean(result.enabled));setGuest(result.name??null);setReady(true);}}).catch(()=>{if(active)setError("Activity is temporarily unavailable.");}).finally(()=>{if(active)setLoaded(true);});
+ useEffect(()=>{let active=true;const controller=new AbortController();
+  // Defer the GET so Strict Mode setup/cleanup does not issue two requests.
+  const loadTimer=setTimeout(()=>{
+  fetch(`${endpoint}?articleId=${encodeURIComponent(articleId)}`,{cache:"no-store",signal:controller.signal}).then(async response=>{const result=await response.json();if(!response.ok)throw new Error(result.error||"Unable to load activity.");if(active){setLiked(Boolean(result.liked));setBookmarked(Boolean(result.bookmarked));setGuestAllowed(Boolean(result.enabled));setGuest(result.name??null);setReady(true);}}).catch(()=>{if(active)setError("Activity is temporarily unavailable.");}).finally(()=>{if(active)setLoaded(true);});
+  },0);
   const timer=setTimeout(()=>{if(document.visibilityState!=="visible")return;
     fetch("/api/guest/activity",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"view",articleId}),keepalive:true}).catch(()=>{});
     if(isReader)fetch("/api/reader/activity",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"read",articleId})}).catch(()=>{});
   },2500);
-  return()=>{active=false;clearTimeout(timer);};
+  return()=>{active=false;clearTimeout(loadTimer);clearTimeout(timer);controller.abort();};
  },[articleId,isReader,endpoint]);
  async function request(url,payload,method="POST"){
   const response=await fetch(url,{method,headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const data=response.status===204?{}:await response.json();if(!response.ok)throw new Error(data.error||"Please try again.");return data;

@@ -1382,13 +1382,13 @@ html[data-cb-rain=on] :is(.home-hero,.home-popular-section,.latest-section,.home
 html[data-cb-rain=on] .home-beginner-section :is(h2,h3,p){color:var(--ink)!important}
 html[data-cb-rain=on] .home-beginner-section :is(.section-kicker,.home-beginner-steps article>span){color:var(--accent)!important}
 html[data-cb-rain=on] :is(.site-header,.portal-header){background:var(--cb-glass)!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-html[data-cb-rain=on] :is(.article-card,.article-list-card,.directory-card,.home-topic-card,.home-contributor-card,.popular-article-row,.featured-card,.home-newsletter-card,.portal-card,.portal-table-card,.dashboard-card,.stat-card,.auth-card,.editor-card,.workspace-card,.workflow-card,.history-card,.contact-card,.error-card,.loading-card,.portal-stats article,.article-stats article,.workflow-step,.learning-feature,.home-beginner-steps article,.cb-filter-panel){background:radial-gradient(220px circle at var(--cb-card-x,-300px) var(--cb-card-y,-300px),var(--cb-glass-shine),transparent 75%),var(--cb-glass)!important;border:1px solid var(--cb-glass-edge)!important;border-radius:15px!important;box-shadow:0 8px 25px var(--cb-glass-shadow),inset 0 1px 0 var(--cb-glass-shine)!important;backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+html[data-cb-rain=on] :is(.article-card,.article-list-card,.directory-card,.home-topic-card,.home-contributor-card,.popular-article-row,.featured-card,.home-newsletter-card,.portal-card,.portal-table-card,.dashboard-card,.stat-card,.auth-card,.editor-card,.workspace-card,.workflow-card,.history-card,.contact-card,.error-card,.loading-card,.portal-stats article,.article-stats article,.workflow-step,.learning-feature,.home-beginner-steps article,.cb-filter-panel){background:radial-gradient(220px circle at var(--cb-card-x,-300px) var(--cb-card-y,-300px),var(--cb-glass-shine),transparent 75%),var(--cb-glass)!important;border:1px solid var(--cb-glass-edge)!important;border-radius:15px!important;box-shadow:0 8px 25px var(--cb-glass-shadow),inset 0 1px 0 var(--cb-glass-shine),var(--mq-edge-halo)!important;backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
 html[data-cb-rain=on] .home-featured-card .featured-content{background:transparent!important}
 html[data-cb-rain=on] .article-grid .article-card .article-body{padding:17px!important}
 html[data-cb-rain=on] .popular-article-row{padding:12px!important}
 html[data-cb-rain=on] :is(.primary-button,.secondary-button,.signin-button,.icon-button,.menu-button,.cb-write-link,.btn){border-radius:12px!important}
 html[data-cb-rain=on] :is(.secondary-button,.signin-button,.icon-button,.menu-button,.cb-write-link){background:var(--cb-glass)!important;box-shadow:inset 0 1px 0 var(--cb-glass-shine)}
-@media(hover:hover) and (pointer:fine){html[data-cb-rain=on] :is(.article-card,.directory-card,.home-topic-card,.home-contributor-card,.popular-article-row,.home-featured-card):hover{border-color:var(--ocean)!important;box-shadow:0 12px 30px var(--cb-glass-shadow)!important}}
+@media(hover:hover) and (pointer:fine){html[data-cb-rain=on] :is(.article-card,.directory-card,.home-topic-card,.home-contributor-card,.popular-article-row,.home-featured-card):hover{border-color:var(--ocean)!important;box-shadow:0 12px 30px var(--cb-glass-shadow),var(--mq-edge-halo-hover)!important}}
 @media(max-width:700px){html[data-cb-rain=on] :is(.article-card,.directory-card,.home-topic-card,.home-contributor-card,.portal-card,.portal-table-card,.editor-card,.workspace-card){backdrop-filter:none;-webkit-backdrop-filter:none}}
 @media(prefers-reduced-motion:reduce){.cb-rain-canvas{display:none!important}}
 html[data-cb-rain=on] :is(.portal-frame,.portal-shell,.article-workspace-page){background-color:transparent!important}
@@ -1400,12 +1400,12 @@ html[data-cb-rain=on][data-cb-motion=on] :is(.article-card,.article-list-card,.d
  --cb-local-glow:transparent;
  background:radial-gradient(150px circle at var(--cb-card-x,-300px) var(--cb-card-y,-300px),var(--cb-local-glow),transparent 72%),linear-gradient(135deg,var(--cb-liquid-tint),transparent 48%,var(--cb-liquid-tint)),rgba(var(--cb-liquid-rgb),var(--cb-liquid-opacity))!important;
  border:1px solid var(--cb-liquid-edge)!important;border-radius:25px!important;
- box-shadow:inset 0 1px 1px var(--cb-liquid-reflect),inset 1px 0 1px var(--cb-liquid-tint),0 10px 26px var(--cb-liquid-shadow)!important;
+ box-shadow:inset 0 1px 1px var(--cb-liquid-reflect),inset 1px 0 1px var(--cb-liquid-tint),0 10px 26px var(--cb-liquid-shadow),var(--mq-edge-halo)!important;
  -webkit-backdrop-filter:blur(12px) saturate(145%);backdrop-filter:blur(12px) saturate(145%);
  transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease!important;
 }
 @media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
-html[data-cb-rain=on][data-cb-motion=on] :is(.article-card,.article-list-card,.directory-card,.home-topic-card,.home-contributor-card,.popular-article-row,.featured-card,.home-newsletter-card,.portal-card,.portal-table-card,.dashboard-card,.stat-card,.auth-card,.editor-card,.workspace-card,.workflow-card,.history-card,.contact-card,.error-card,.loading-card,.portal-stats article,.article-stats article,.workflow-step,.learning-feature,.home-beginner-steps article,.cb-filter-panel,.home-featured-card):hover{--cb-local-glow:var(--cb-liquid-hover);border-color:var(--cb-liquid-edge)!important;box-shadow:inset 0 1px 1px var(--cb-liquid-reflect),0 12px 28px var(--cb-liquid-shadow)!important;}
+html[data-cb-rain=on][data-cb-motion=on] :is(.article-card,.article-list-card,.directory-card,.home-topic-card,.home-contributor-card,.popular-article-row,.featured-card,.home-newsletter-card,.portal-card,.portal-table-card,.dashboard-card,.stat-card,.auth-card,.editor-card,.workspace-card,.workflow-card,.history-card,.contact-card,.error-card,.loading-card,.portal-stats article,.article-stats article,.workflow-step,.learning-feature,.home-beginner-steps article,.cb-filter-panel,.home-featured-card):hover{--cb-local-glow:var(--cb-liquid-hover);border-color:var(--cb-liquid-edge)!important;box-shadow:inset 0 1px 1px var(--cb-liquid-reflect),0 12px 28px var(--cb-liquid-shadow),var(--mq-edge-halo-hover)!important;}
 html[data-cb-rain=on][data-cb-motion=on] :is(.article-card,.article-list-card,.directory-card,.home-topic-card,.home-contributor-card,.popular-article-row,.home-featured-card):hover{transform:translateY(-2px)}
 html[data-cb-rain=on][data-cb-motion=on] :is(.portal-card,.dashboard-card,.stat-card):hover{transform:none}
 html[data-cb-rain=on][data-cb-motion=on] :is(.primary-button,.secondary-button,.signin-button,.icon-button,.cb-write-link,.btn):not(:disabled):hover{transform:translateY(-1px);box-shadow:0 3px 10px var(--cb-liquid-shadow)!important}
@@ -1485,3 +1485,61 @@ html{scroll-padding-top:90px}
 @media(max-width:600px){html body .home-beginner-steps article{grid-template-columns:36px minmax(0,1fr)!important;gap:12px!important;padding:16px!important;border-radius:16px!important;min-height:0!important}html body .home-beginner-steps{gap:12px!important}html body .home-beginner-steps article>span{min-width:32px;min-height:32px}html body .home-beginner-intro .primary-button{max-width:100%;white-space:normal;text-align:left}html body .home-beginner-intro h2{font-size:clamp(28px,8vw,38px)}}
 @media(prefers-reduced-motion:reduce){html body :is(.home-beginner-steps article,.home-topic-card,.home-contributor-card,.article-card){transition:none!important;animation:none!important;transform:none!important}}
 /* MADQUILL FINAL POLISH END */
+
+/* MADQUILL TARGETED REPAIR BEGIN */
+/* Keep the pre-V3 Ocean Porcelain and V8 glass declarations above unchanged. */
+html[data-theme] body header.site-header,html[data-cb-rain=on] body header.site-header{position:sticky;top:10px;z-index:40;width:min(1320px,calc(100% - 32px));max-width:1320px;margin:10px auto 0;border-radius:20px;border:1px solid var(--nav-edge);box-shadow:var(--card-shadow);overflow:visible}
+html body header.site-header .nav-wrap{width:calc(100% - 28px);gap:8px}
+html body header.site-header .brand .brand-mark{width:50px;height:50px;flex:0 0 50px}
+html body header.site-header .brand-mark img{width:50px;height:50px;object-fit:contain}
+html{scroll-padding-top:98px}
+html body .popular-article-list{display:grid;gap:14px;border:0!important;padding:0;margin:0;min-width:0}
+html body .popular-article-list .popular-article-row{padding:20px 22px!important;margin:0;min-width:0;box-sizing:border-box;grid-template-columns:52px minmax(0,1fr) auto 22px;gap:16px}
+html body .popular-article-row .popular-article-copy{min-width:0;overflow-wrap:anywhere}
+/* Only previously square public feature panels; leave V8 glass cards alone. */
+html body .public-feature-grid article{border-radius:20px;box-shadow:var(--card-shadow),var(--mq-edge-halo)}
+html body .mq-contact-card.contact-card{max-width:680px;padding:clamp(20px,4vw,36px);display:grid;gap:16px;border-radius:20px}
+html body .mq-page{min-height:100vh;display:flex;flex-direction:column;color:var(--ink)}
+html body .mq-page-content{width:min(1240px,calc(100% - 48px));margin:0 auto;flex:1;padding:clamp(44px,6vw,88px) 0}
+html body .mq-page-heading{max-width:760px;margin-bottom:32px}
+html body .mq-page-heading h1{font-family:Georgia,serif;font-size:clamp(34px,5vw,62px);letter-spacing:-.035em;line-height:1.1;margin:12px 0 14px;color:var(--ink)}
+html body .mq-page-heading p{color:var(--muted);font-size:16px;line-height:1.75;margin:0}
+html body .mq-contact-card h2{font-size:24px;margin:0;color:var(--ink)}
+html body .mq-contact-card p{margin:0;color:var(--muted);line-height:1.7}
+html body .mq-contact-card a{color:var(--editorial-accent);overflow-wrap:anywhere;font-weight:650;text-decoration:underline;text-underline-offset:4px}
+html body .mq-contact-symbol{display:grid;place-items:center;width:48px;height:48px;border:1px solid var(--line);border-radius:14px;color:var(--editorial-accent);background:var(--surface-secondary)}
+html body .mq-pagination{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:30px;color:var(--muted)}
+html body .mq-page :is(a,button):focus-visible{outline:2px solid var(--editorial-accent);outline-offset:4px}
+@media(max-width:1100px){html body header.site-header .nav-links{top:calc(100% + 8px);left:0;right:0;border-radius:16px}}
+@media(max-width:600px){html[data-theme] body header.site-header,html[data-cb-rain=on] body header.site-header{width:calc(100% - 20px);top:8px;margin-top:8px;border-radius:16px;height:64px;min-height:64px}html body header.site-header .nav-wrap{width:calc(100% - 16px);gap:4px}html body header.site-header .brand .brand-mark{width:40px;height:40px;flex:0 0 40px}html body header.site-header .brand-mark img{width:40px;height:40px}html body .popular-article-list .popular-article-row{grid-template-columns:34px minmax(0,1fr) 18px;gap:10px 12px;padding:16px!important}html body .popular-article-row .popular-article-meta{grid-column:2;grid-row:2;text-align:left}html body .popular-article-row .popular-arrow{grid-column:3;grid-row:1}html body .mq-page-content{width:calc(100% - 32px);padding-block:40px}}
+/* MADQUILL TARGETED REPAIR END */
+
+
+/* MADQUILL SUBTLE EDGE HALO: reuse the existing ocean accent; no palette changes. */
+:root{--mq-edge-halo:0 0 8px color-mix(in srgb,var(--ocean) 7%,transparent);--mq-edge-halo-hover:0 0 12px color-mix(in srgb,var(--ocean) 11%,transparent)}
+html[data-theme="dark"]{--mq-edge-halo:0 0 10px color-mix(in srgb,var(--ocean) 12%,transparent);--mq-edge-halo-hover:0 0 14px color-mix(in srgb,var(--ocean) 18%,transparent)}
+
+/* MADQUILL FINAL EDITORIAL POLISH — geometry and interaction only */
+html body :is(.home-popular-section,.home-topics-section,.home-community-section,.latest-section,.home-workflow-section){padding-block:clamp(32px,4.2vw,58px)}
+html body .home-newsletter-section{padding-block:clamp(24px,3vw,42px)}
+html body .home-topic-grid{gap:clamp(12px,1.6vw,20px)}
+html body .home-topic-card{min-height:148px;padding:20px;gap:4px}
+html body .home-topic-card .home-topic-icon{margin-bottom:8px}
+html body .home-topic-card .home-topic-count{padding-top:10px}
+html body .home-community-cta{border-radius:14px;flex-wrap:wrap}
+html body .home-soft-empty{min-height:72px;border-radius:14px}
+html body .home-popular-section .mq-trending-symbol{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;border:1px solid var(--line);color:var(--ocean)}
+html body .home-popular-section .popular-article-row{grid-template-columns:40px minmax(0,1fr) auto 22px;gap:14px}
+html body .home-popular-section .popular-article-copy strong{white-space:normal;overflow-wrap:anywhere}
+html body :is(.home-section-heading,.section-heading,.public-page-heading) h2{text-wrap:balance}
+html body :is(.home-topic-card,.home-contributor-card,.directory-card,.article-card,.article-list-card,.popular-article-row,.workflow-step,.home-beginner-steps article,.home-newsletter-card){min-width:0}
+html body :is(.home-topic-card,.home-contributor-card,.directory-card,.article-card,.article-list-card,.popular-article-row,.all-articles-link,.featured-read-link,.newsletter-link,.home-community-cta a):focus-visible{outline:2px solid var(--ocean);outline-offset:3px}
+@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+ html body :is(.home-topic-count,.popular-arrow,.home-contributor-card>svg,.all-articles-link>svg,.featured-read-link>svg,.newsletter-link>svg,.home-community-cta a>svg){transition:translate .2s ease}
+ html body :is(.home-topic-card:hover .home-topic-count,.popular-article-row:hover .popular-arrow,.home-contributor-card:hover>svg,.all-articles-link:hover>svg,.featured-read-link:hover>svg,.newsletter-link:hover>svg,.home-community-cta a:hover>svg){translate:3px 0}
+ html body :is(.home-topic-card,.workflow-step,.home-beginner-steps article):hover :is(.home-topic-icon,.workflow-icon,span[aria-hidden=true]) svg{animation:mq-icon-nudge .32s ease both}
+ html body :is(.primary-button,.secondary-button,.signin-button,.icon-button):active:not(:disabled){scale:.98}
+}
+@keyframes mq-icon-nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@media(max-width:600px){html body .home-popular-section .popular-article-row{grid-template-columns:32px minmax(0,1fr) 18px;gap:10px}html body .home-popular-section .mq-trending-symbol{width:30px;height:30px}html body .home-topic-card{min-height:132px;padding:16px}html body .home-community-cta{align-items:flex-start}}
+@media(prefers-reduced-motion:reduce){html body :is(.home-topic-count,.popular-arrow,.home-contributor-card>svg,.all-articles-link>svg,.featured-read-link>svg,.newsletter-link>svg){transition:none;translate:none}}

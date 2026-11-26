@@ -28,7 +28,7 @@ export default function PortalHeader({ displayName, role }) {
 
   return (
     <header className="portal-header">
-      <Link className="brand" href="/"><span className="brand-mark"><img src="/branding/madquill-icon.png" alt="" width={36} height={36} /></span><span>Mad<span>Quill</span></span></Link>
+      <Link className="brand" href="/"><span className="brand-mark"><img src="/branding/madquill-icon-v2.webp" alt="" width={36} height={36} /></span><span>Mad<span>Quill</span></span></Link>
       <div className="portal-account">
         <span>{displayName}<small>{role}</small></span>
         <Link href="/">View site</Link><Link href="/profile">Profile</Link><ThemeToggle />
