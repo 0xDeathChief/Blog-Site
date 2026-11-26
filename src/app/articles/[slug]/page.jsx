@@ -130,7 +130,7 @@ export default async function PublishedArticlePage({ params }) {
           />
           <footer className="published-article-footer">
             <span>Reviewed and published by the MadQuill editorial team.</span>
-            <Link href="/">Explore more security writing</Link>
+            <Link className="secondary-button mq-article-explore" href="/articles">Explore more security writing <span aria-hidden="true">→</span></Link>
           </footer>
         </div>
       </article>

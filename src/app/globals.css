@@ -1543,3 +1543,13 @@ html body :is(.home-topic-card,.home-contributor-card,.directory-card,.article-c
 @keyframes mq-icon-nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
 @media(max-width:600px){html body .home-popular-section .popular-article-row{grid-template-columns:32px minmax(0,1fr) 18px;gap:10px}html body .home-popular-section .mq-trending-symbol{width:30px;height:30px}html body .home-topic-card{min-height:132px;padding:16px}html body .home-community-cta{align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){html body :is(.home-topic-count,.popular-arrow,.home-contributor-card>svg,.all-articles-link>svg,.featured-read-link>svg,.newsletter-link>svg){transition:none;translate:none}}
+
+/* MadQuill article engagement spacing — no palette changes */
+.published-article-page .cb-discussion { border-radius:0!important; margin-top:32px; }
+.published-article-page .cb-discussion .cb-engagement-meta { gap:12px 20px; margin-bottom:16px; }
+.published-article-page .cb-discussion .article-interaction-actions { gap:10px; margin:0 0 14px; }
+.published-article-page .cb-discussion .article-interaction-actions button { min-height:44px; padding:10px 16px; gap:8px; justify-content:center; }
+.published-article-page .cb-discussion .mq-engagement-signin { margin:0 0 20px; line-height:1.65; }
+.published-article-page .published-article-footer { align-items:center; gap:16px; }
+.published-article-page .published-article-footer .mq-article-explore { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:10px 16px; text-decoration:none; border-radius:12px; flex-shrink:0; }
+@media(max-width:600px){.published-article-page .published-article-footer{align-items:stretch}.published-article-page .published-article-footer .mq-article-explore{white-space:normal;text-align:center}}

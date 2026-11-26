@@ -6,6 +6,7 @@ import GuestChallenge from "./GuestChallenge";
 
 export default function ArticleInteractions({articleId,articlePath,isReader,comments,engagement={}}){
  const [items,setItems]=useState(comments??[]);
+ const [viewCount,setViewCount]=useState(engagement.view_count==null?null:Number(engagement.view_count));
  const [liked,setLiked]=useState(false),[bookmarked,setBookmarked]=useState(false);
  const [likeCount,setLikeCount]=useState(Number(engagement.like_count)||0),[commentCount,setCommentCount]=useState(Math.max(Number(engagement.comment_count)||0,comments?.length||0));
  const [comment,setComment]=useState(""),[username,setUsername]=useState(""),[guest,setGuest]=useState(null),[guestAllowed,setGuestAllowed]=useState(false),[loaded,setLoaded]=useState(false),[ready,setReady]=useState(false);
@@ -18,11 +19,26 @@ export default function ArticleInteractions({articleId,articlePath,isReader,comm
   const loadTimer=setTimeout(()=>{
   fetch(`${endpoint}?articleId=${encodeURIComponent(articleId)}`,{cache:"no-store",signal:controller.signal}).then(async response=>{const result=await response.json();if(!response.ok)throw new Error(result.error||"Unable to load activity.");if(active){setLiked(Boolean(result.liked));setBookmarked(Boolean(result.bookmarked));setGuestAllowed(Boolean(result.enabled));setGuest(result.name??null);setReady(true);}}).catch(()=>{if(active)setError("Activity is temporarily unavailable.");}).finally(()=>{if(active)setLoaded(true);});
   },0);
-  const timer=setTimeout(()=>{if(document.visibilityState!=="visible")return;
-    fetch("/api/guest/activity",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"view",articleId}),keepalive:true}).catch(()=>{});
-    if(isReader)fetch("/api/reader/activity",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"read",articleId})}).catch(()=>{});
-  },2500);
-  return()=>{active=false;clearTimeout(loadTimer);clearTimeout(timer);controller.abort();};
+  let timer,attempted=false;
+  async function refreshViews(){
+    if(document.visibilityState!=="visible")return;
+    try{const response=await fetch(`/api/guest/activity?stats=views&articleId=${encodeURIComponent(articleId)}`,{cache:"no-store",signal:controller.signal});const data=await response.json();if(active&&response.ok&&Number.isSafeInteger(data.viewCount)&&data.viewCount>=0)setViewCount(data.viewCount);}catch{}
+  }
+  function scheduleView(){
+    clearTimeout(timer);
+    if(attempted||document.visibilityState!=="visible")return;
+    timer=setTimeout(async()=>{
+      if(!active||document.visibilityState!=="visible")return;
+      attempted=true;
+      try{const response=await fetch("/api/guest/activity",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"view",articleId}),keepalive:true});const data=await response.json();if(active&&response.ok&&Number.isSafeInteger(data.viewCount)&&data.viewCount>=0)setViewCount(data.viewCount);}catch{}
+      if(isReader&&active)fetch("/api/reader/activity",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"read",articleId})}).catch(()=>{});
+    },2500);
+  }
+  function onVisibility(){scheduleView();if(document.visibilityState==="visible")refreshViews();}
+  scheduleView();
+  const interval=setInterval(refreshViews,30000);
+  document.addEventListener("visibilitychange",onVisibility);
+  return()=>{active=false;clearTimeout(loadTimer);clearTimeout(timer);clearInterval(interval);document.removeEventListener("visibilitychange",onVisibility);controller.abort();};
  },[articleId,isReader,endpoint]);
  async function request(url,payload,method="POST"){
   const response=await fetch(url,{method,headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const data=response.status===204?{}:await response.json();if(!response.ok)throw new Error(data.error||"Please try again.");return data;
@@ -33,13 +49,13 @@ export default function ArticleInteractions({articleId,articlePath,isReader,comm
  async function toggleBookmark(){await perform(async()=>{await request("/api/reader/activity",{action:"bookmark",articleId},bookmarked?"DELETE":"POST");setBookmarked(!bookmarked);});}
  async function submitComment(event){event.preventDefault();if(!comment.trim()||!canInteract)return;await perform(async()=>{const result=await request(endpoint,{action:"comment",articleId,body:comment});if(result.comment){setItems(old=>[result.comment,...old.filter(c=>c.id!==result.comment.id)]);setCommentCount(n=>n+1);setNotice("Comment posted.");}else if(result.status==="pending"){setNotice("Comment submitted. It will appear after moderation.");}else{setNotice("Comment saved. Reopen this article to view the latest discussion.");}setComment("");});}
  return <section className="article-interactions cb-discussion" aria-label="Article engagement">
-  <div className="cb-engagement-meta"><span title="Approximate browser-day views over the last 30 days"><Eye size={16}/> {Number(engagement.view_count)||0} views / 30d</span><span><MessageCircle size={16}/> {commentCount} comments</span></div>
+  <div className="cb-engagement-meta"><span title="Approximate browser-day views over the last 30 days"><Eye size={16}/> {viewCount===null?"Views unavailable":`${viewCount} ${viewCount===1?"view":"views"} / 30d`}</span><span><MessageCircle size={16}/> {commentCount} comments</span></div>
   <div className="article-interaction-actions">
    <button type="button" disabled={busy||!canInteract||!ready} aria-pressed={liked} onClick={toggleLike}><Heart size={17} fill={liked?"currentColor":"none"}/> {likeCount} {liked?"Liked":"Like"}</button>
    {isReader&&<button type="button" disabled={busy||!ready} aria-pressed={bookmarked} onClick={toggleBookmark}><Bookmark size={17}/> {bookmarked?"Bookmarked":"Bookmark"}</button>}
   </div>
   {!isReader&&!guest&&loaded&&guestAllowed&&<form className="cb-guest-form" onSubmit={identify}><div><strong>Join the conversation</strong><p>Choose a guest username. No email or password needed. Guest comments are moderated.</p></div><label htmlFor="cb-guest-name">Guest username</label><div className="cb-guest-input"><input id="cb-guest-name" autoComplete="nickname" maxLength={32} minLength={3} required value={username} onChange={e=>setUsername(e.target.value)} placeholder="Your display name"/><button type="submit" className="primary-button" disabled={busy||username.trim().length<3||(Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY)&&!captchaToken)}>Continue as guest</button></div><GuestChallenge onToken={setCaptchaToken} resetCount={challengeReset}/><p><Link href={`/sign-in?next=${encodeURIComponent(articlePath)}`}>Sign in instead</Link> to keep a permanent profile and bookmarks.</p></form>}
-  {!isReader&&!guest&&loaded&&!guestAllowed&&<p><Link href={`/sign-in?next=${encodeURIComponent(articlePath)}`}>Sign in</Link> to comment or react. Guest interactions are not available at the moment.</p>}
+  {!isReader&&!guest&&loaded&&!guestAllowed&&<p className="mq-engagement-signin"><Link href={`/sign-in?next=${encodeURIComponent(articlePath)}`}>Sign in</Link> to comment or react. Guest interactions are not available at the moment.</p>}
   {!isReader&&guest&&<p className="cb-guest-status">Participating as <strong>{guest}</strong> · Guest</p>}
   <div className="article-comments"><h2><MessageCircle size={18}/> Discussion <span>{commentCount}</span></h2>
    {canInteract&&<form onSubmit={submitComment}><label htmlFor="article-comment">Add a comment</label><textarea id="article-comment" rows={3} maxLength={2000} value={comment} onChange={e=>setComment(e.target.value)} required placeholder="Share a constructive thought or question…"/><button className="primary-button" type="submit" disabled={busy||!comment.trim()}>{busy?"Please wait…":"Post comment"}</button></form>}

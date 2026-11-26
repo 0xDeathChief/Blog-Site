@@ -49,6 +49,7 @@ export default function ArticleLearningExperience({
       </div>
       </ReaderPreferences>
       <ArticleInteractions
+        key={`interactions-${articleId}`}
         articleId={articleId}
         articlePath={articlePath}
         isReader={isReader}

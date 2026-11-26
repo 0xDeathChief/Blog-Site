@@ -16,6 +16,14 @@ const mutation=z.discriminatedUnion("action",[
 ]);
 async function allowed(admin,key,limit,windowSeconds){const {data,error}=await admin.rpc("consume_rate_limit",{p_bucket_key:key,p_request_limit:limit,p_window_seconds:windowSeconds});return !error&&data===true;}
 export async function GET(request){
+ const url=new URL(request.url);
+ if(url.searchParams.get("stats")==="views"){
+   const id=idSchema.safeParse(url.searchParams.get("articleId"));if(!id.success)return json({error:"Invalid article"},400);
+   const {data,error}=await createSupabaseAdminClient().from("cb_article_engagement").select("view_count").eq("article_id",id.data).maybeSingle();
+   if(error){console.warn("[MadQuill views] Aggregate unavailable",error.code);return json({error:"View count unavailable"},503);}
+   if(!data)return json({error:"Article not found"},404);
+   return json({viewCount:Number(data.view_count)});
+ }
  const enabled=guestEnabled(request);if(!enabled)return json({enabled:false,name:null,liked:false});
  const guest=readIdentity(request,"guest");if(!guest)return json({enabled:true,name:null,liked:false});
  const articleId=idSchema.safeParse(new URL(request.url).searchParams.get("articleId"));
@@ -31,10 +39,13 @@ export async function POST(request){
  const parsed=mutation.safeParse(input.body);if(!parsed.success)return json({error:"Check the username, article or comment and try again."},400);
  const payload=parsed.data;const admin=createSupabaseAdminClient();
  if(payload.action==="view"){
-   if(!await allowed(admin,"cb-view-global",1000,300))return json({status:"skipped"});
+   if(!await allowed(admin,"cb-view-global",1000,300))return json({status:"skipped"},429);
    const old=readIdentity(request,"visitor");const visitor=old??newIdentity("visitor");
    const {error}=await admin.rpc("cb_record_article_view",{p_article_id:payload.articleId,p_visitor_hash:identityHash(visitor)});
-   const response=json({status:error?"skipped":"recorded"});if(!old)setIdentity(response,visitor);return response;
+   if(error){console.warn("[MadQuill views] Recording unavailable",error.code);return json({error:"View recording unavailable"},503);}
+   const {data,error:countError}=await admin.from("cb_article_engagement").select("view_count").eq("article_id",payload.articleId).maybeSingle();
+   if(countError)console.warn("[MadQuill views] Aggregate unavailable",countError.code);
+   const response=json({status:"recorded",viewCount:data?Number(data.view_count):null});if(!old)setIdentity(response,visitor);return response;
  }
  if(!guestEnabled(request))return json({error:"Guest interactions are temporarily unavailable. Sign in to participate."},503);
  if(payload.action==="identify"){
